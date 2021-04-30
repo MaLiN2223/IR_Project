@@ -9,4 +9,3 @@ def get_mongo_connection():
         host=config["remotepath"]
     )  # , authSource="dissertation", username=config["username"], password=config["password"])
     return myclient["IR"]
-
