@@ -1,6 +1,4 @@
 [tool.black]
-line-length = 150
-target-version = ['py37']
 exclude = '''
 /(
     \.eggs
@@ -15,3 +13,11 @@ exclude = '''
   | dist
 )/
 '''
+line-length = 150
+target-version = ['py37']
+
+[tool.pytest.ini_options]
+python_files = '*_tests.py'
+testpaths = [
+  "tests",
+]

@@ -21,7 +21,9 @@ class PagesParser:
     def extract_linkes(self, soup: BeautifulSoup) -> List[str]:
         links = []
         for link in soup.findAll("a"):
-            links.append(link.get("href"))
+            url = link.get("href")
+            if url is not None:
+                links.append(url)
         return links
 
 
@@ -75,7 +77,9 @@ def fix_wookiepedia(url: str):
     return url.split("?")[0]
 
 
-def normalize_url(url: str):
+def normalize_url(url: str, lower: bool = True):
+    if lower:
+        url = url.lower()
     url = url.replace("https://", "").replace("http://", "").strip("/")
     if url.startswith("www."):
         url = url[4:]
@@ -149,6 +153,7 @@ class Crawler(Thread):
             else:
                 no_data = 0
             i = 0
+            every = 10
             for url in tqdm(urls, desc="urls for downloader"):
                 hashed_base_url = encode_url(url)
                 try:
@@ -165,6 +170,7 @@ class Crawler(Thread):
 
                 page = BeautifulSoup(page, "html.parser")
                 all_links = parser.extract_linkes(page)
+
                 wookiepedia_links = [(fix_wookiepedia(x), x) for x in all_links if x is not None and should_map(x)]
 
                 bulk = websites_db.initialize_unordered_bulk_op()
@@ -178,23 +184,27 @@ class Crawler(Thread):
                                 "fixed_url": fixed_link,
                                 # "represented_as": [real_link],
                                 "normalized_url": normalized_url,
+                                "real_base_url": normalize_url(url, False)
                                 # "from": [hashed_base_url],
                             }
                         }
                     )
                     # bulk.find({"_id": hashed_url}).update_one(
-                    #     {"$push": {"represented_as": real_link, "from": hashed_base_url,},}
+                    #     {"$push": {"represented_as": real_link},}
                     # )
                     i += 1
 
                 to_add = {
                     "_id": hashed_base_url,
                     "all_links": all_links,
-                    "page_text": page.get_text().replace("\n", " "),
+                    "page_text": page.find("div", {"id": "content"}).get_text(),
                     "html": str(page),
+                    "title": page.find("title").get_text().replace("| Wookieepedia | Fandom", "").strip(),
                 }
                 bulk.find({"_id": hashed_base_url}).update_one({"$set": to_add})
-                bulk.execute()
+                if i > every:
+                    bulk.execute()
+                    i = 0
 
 
 def is_any_thread_alive(threads):
@@ -205,10 +215,11 @@ def map_wookiepedia():
     provider = WebsitesProvider()
     threads = []
     print("Starting...")
-    for _ in range(2):
+    for _ in range(10):
         crawler = Crawler(provider)
         crawler.daemon = True
         crawler.start()
+        time.sleep(5)
         threads.append(crawler)
     print("Accumulated")
     while is_any_thread_alive(threads):
