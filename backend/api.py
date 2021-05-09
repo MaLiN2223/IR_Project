@@ -7,6 +7,9 @@ app = Flask(__name__)
 api = Api(app)
 
 
+limiter = Limiter(app, key_func=get_remote_address, default_limits=["200 per day", "50 per hour"])
+
+
 @app.before_first_request
 def startup():
     print("Starting the app...")

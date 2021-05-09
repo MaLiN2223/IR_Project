@@ -104,6 +104,7 @@ def prepare_dictionary():
 
 
 def generate_weighted_vectors():
+    print("Generate weighted vectors")
     tfidf_model = models.TfidfModel.load(tfidf_model_name)
     dict = Dictionary.load(dict_path)
     ft_model = FastText.load(fasttext_model_name)
@@ -134,10 +135,11 @@ def generate_tfidf():
 
 
 def train_fasttext():
-    generate_file = False
+    print("Training fasttext")
+    generate_file = True
     ft_model = FastText(
         sg=1,  # use skip-gram: usually gives better results
-        vector_size=1024,  # embedding dimension (default)
+        vector_size=300,  # embedding dimension (default)
         window=10,  # window size: 10 tokens before and 10 tokens after to get wider context
         min_count=5,  # only consider tokens with at least n occurrences in the corpus
         negative=15,  # negative subsampling: bigger than default to sample negative examples more
@@ -146,7 +148,7 @@ def train_fasttext():
     )
     if generate_file:
         with open("storage", "w", encoding="utf-8") as f:
-            for sentence in pull_text():
+            for id, sentence in text_from_file():
                 sentence = " ".join(sentence)
                 try:
                     f.write(sentence + "\n")

@@ -10,15 +10,17 @@ from src.data_processing.normalization import (
     train_fasttext,
 )
 
-# map_wookiepedia()
-generate_cleaned_text()
-
 
 def compute_index():
-    dump_corpus_to_file()
-    prepare_dictionary()
-    generate_tfidf()
+    # dump_corpus_to_file()
+    # prepare_dictionary()
+    # generate_tfidf()
     train_fasttext()
     generate_weighted_vectors()
     generate_tookup()
     search()
+
+
+# map_wookiepedia()
+# generate_cleaned_text()
+compute_index()
