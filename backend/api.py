@@ -2,9 +2,16 @@ from flask import Flask
 from flask_restful import Resource, Api
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_cors import CORS
 
 app = Flask(__name__)
 api = Api(app)
+CORS(app)
+# cors = CORS(app, resource={
+#     r"/*":{
+#         "origins":"*"
+#     }
+# })
 
 
 limiter = Limiter(app, key_func=get_remote_address, default_limits=["200 per day", "50 per hour"])
