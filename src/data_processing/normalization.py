@@ -146,8 +146,9 @@ def train_fasttext():
         min_n=2,  # min character n-gram
         max_n=5,  # max character n-gram
     )
+    tmp_fasttext_file = "./data/storage"
     if generate_file:
-        with open("storage", "w", encoding="utf-8") as f:
+        with open(tmp_fasttext_file, "w", encoding="utf-8") as f:
             for id, sentence in text_from_file():
                 sentence = " ".join(sentence)
                 try:
@@ -155,10 +156,10 @@ def train_fasttext():
                 except:  # noqa
                     print(sentence)
                     raise
-    ft_model.build_vocab(corpus_file="storage")
+    ft_model.build_vocab(corpus_file=tmp_fasttext_file)
     total_words = ft_model.corpus_total_words
     epoch_logger = EpochLogger()
-    ft_model.train(corpus_file="storage", total_words=total_words, epochs=5, callbacks=[epoch_logger])
+    ft_model.train(corpus_file=tmp_fasttext_file, total_words=total_words, epochs=5, callbacks=[epoch_logger])
     ft_model.save(fasttext_model_name)
 
 

@@ -1,0 +1,1 @@
+https://medium.com/analytics-vidhya/how-to-rate-limit-routes-in-flask-61c6c791961b

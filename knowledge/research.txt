@@ -1,0 +1,39 @@
+https://sci-hub.st/10.1109/IWSSIP.2013.6623484
+https://people.kth.se/~maguire/DEGREE-PROJECT-REPORTS/040130-Philip-Thorn.pdf
+https://opus.cloud.lib.uts.edu.au/bitstream/10453/6844/1/2005001150.pdf
+
+https://github.com/qicst23/topic-specific-web-crawler
+
+https://medium.com/@nirupampratap/crawl-scrape-any-website-a6e6ba2e1086
+https://github.com/topics/focused-crawler
+
+
+https://github.com/VIDA-NYU/ache/tree/master/ache/src/main/java/achecrawler/seedfinder
+
+# Seed finder?
+# Max depth
+
+# RL for focus?
+
+
+https://stackoverflow.com/questions/41290028/removing-non-english-words-from-text-using-python
+https://www.geeksforgeeks.org/python-stemming-words-with-nltk/
+https://medium.com/@deangela.neves/how-to-build-a-search-engine-from-scratch-in-python-part-1-96eb240f9ecb
+https://towardsdatascience.com/how-to-build-a-search-engine-9f8ffa405eac
+https://towardsdatascience.com/create-a-simple-search-engine-using-python-412587619ff5
+
+https://towardsdatascience.com/building-a-sentence-embedding-index-with-fasttext-and-bm25-f07e7148d240
+
+
+
+
+https://towardsdatascience.com/how-to-build-a-smart-search-engine-a86fca0d0795 <-- gensim
+
+
+// Personalization
+https://medium.com/recombee-blog/introduction-to-personalized-search-2b70eb5fa5ae
+https://medium.com/@purbon/listnet-48f56cb80bb2
+
+// Keywords
+https://github.com/MaartenGr/KeyBERT
+https://www.sbert.net/docs/pretrained_models.html <-- sentence transformer
