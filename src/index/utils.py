@@ -1,21 +1,22 @@
-# import pickle
-# import bson
-# from tqdm import tqdm
-# from src.storage.database import websites_db
+from typing import Iterable, Optional
+from gensim.models.fasttext import FastText
+from src.index.contants import fasttet_model_name, index_file_name, dump_ids_file_name
 
 
-# def compute_vectors():
-#     model = SentenceTransformer("paraphrase-distilroberta-base-v1")
-#     query = {"page_text": {"$exists": True}, "vectorized": {"$exists": False}}
-#     bulk = websites_db.initialize_unordered_bulk_op()
-#     i = 0
-#     N = 1000
-#     for item in tqdm(websites_db.find(query, {"page_text": True})):
-#         encoded = model.encode([item["page_text"]])[0]
-#         encoded = bson.Binary(pickle.dumps(encoded, protocol=2))
-#         bulk.find({"_id": item["_id"]}).update_one({"$set": {"vectorized": encoded}})
-#         i += 1
-#         if i > N:
-#             bulk.execute()
-#             bulk = websites_db.initialize_unordered_bulk_op()
-#             i = 0
+def load_fasttext(model_name: str):
+    return FastText.load(f"./data/{model_name}/{fasttet_model_name}")
+
+
+def load_index(model_name: str):
+    import nmslib
+
+    index = nmslib.init(method="hnsw", space="cosinesimil")
+    index.loadIndex(filename=f"./data/{model_name}/{index_file_name}")
+    return index
+
+
+def load_indexes(model_name: Optional[str] = None) -> Iterable[str]:
+    file_name = f"./data/{model_name}/{dump_ids_file_name}" if model_name is not None else f"./data/{dump_ids_file_name}"
+    with open(file_name, "r", encoding="utf-8") as ids:
+        for line in ids:
+            yield line.strip()

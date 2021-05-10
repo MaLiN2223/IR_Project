@@ -1,43 +1,40 @@
 from typing import Iterable, List, Tuple
 import pickle
+from src.index.utils import load_indexes
 from src.index.preprocessing_pipeline import Pipeline
 from src.storage.database import websites_db
 from tqdm import tqdm
 from gensim.corpora import Dictionary
 from nltk.corpus import stopwords
+from gensim.models import fasttext
 from gensim.models.fasttext import FastText
 from gensim import models
 from gensim.models.callbacks import CallbackAny2Vec
 import numpy as np
 import time
-
-#
-
-dict_path = "./data/dictionary.dict"
-fasttext_model_name = "./data/ft_model.m"
-tfidf_model_name = "./data/tfidf_model.m"
-dump_file_path = "./data/dump_processed.dmp"
-dump_ids_file_path = "./data/dump_processed_ids.dmp"
-vectors_file_path = "./data/weighted_doc_vects.p"
-index_file_path = "./data/index"
+from src.index.contants import (
+    dump_file_path,
+    dump_ids_file_path,
+    fasttext_model_path,
+    dict_path,
+    index_file_path,
+    vectors_file_path,
+    tfidf_model_name,
+)
 
 
 class EpochLogger(CallbackAny2Vec):
     def __init__(self):
         self.epoch = 0
+        self.stat_time = time.time()
 
     def on_epoch_begin(self, model):
+        self.start_time = time.time()
         print("Epoch #{} start".format(self.epoch))
 
     def on_epoch_end(self, model):
-        print("Epoch #{} end".format(self.epoch))
+        print(f"Epoch #{self.epoch} end, took {time.time()-self.start_time}")
         self.epoch += 1
-
-
-def load_indexes() -> Iterable[str]:
-    with open(dump_ids_file_path, "r", encoding="utf-8") as ids:
-        for line in ids:
-            yield line.strip()
 
 
 def dump_corpus_to_file():
@@ -51,7 +48,7 @@ def dump_corpus_to_file():
 def text_from_file(split: bool = True):
     with open(dump_ids_file_path, "r", encoding="utf-8") as ids:
         with open(dump_file_path, "r", encoding="utf-8") as f:
-            for id, row in tqdm(zip(ids, f), total=230407):
+            for id, row in tqdm(zip(ids, f), total=218341):
                 if split:
                     splitted = row.strip().split(" ")
                     yield (id, splitted)
@@ -103,11 +100,26 @@ def prepare_dictionary():
     dict.save(dict_path)
 
 
+def generate_fasttext_vectors():
+    print("Generate weighted vectors")
+    ft_model = FastText.load(fasttext_model_path)
+    weighted_doc_vects = []
+    for id, doc in tqdm(text_from_file()):
+        doc_vector = []
+        for word in doc:
+            encoded_word = ft_model.wv[word]
+            weighted_vector = encoded_word
+            doc_vector.append(weighted_vector)
+        doc_vector_mean = np.mean(doc_vector, axis=0)
+        weighted_doc_vects.append(doc_vector_mean)
+    pickle.dump(weighted_doc_vects, open(vectors_file_path, "wb"))
+
+
 def generate_weighted_vectors():
     print("Generate weighted vectors")
     tfidf_model = models.TfidfModel.load(tfidf_model_name)
     dict = Dictionary.load(dict_path)
-    ft_model = FastText.load(fasttext_model_name)
+    ft_model = FastText.load(fasttext_model_path)
     weighted_doc_vects = []
     for id, doc in tqdm(text_from_file()):
         doc_vector = []
@@ -160,7 +172,7 @@ def train_fasttext():
     total_words = ft_model.corpus_total_words
     epoch_logger = EpochLogger()
     ft_model.train(corpus_file=tmp_fasttext_file, total_words=total_words, epochs=5, callbacks=[epoch_logger])
-    ft_model.save(fasttext_model_name)
+    ft_model.save(fasttext_model_path)
 
 
 def generate_tookup():
@@ -181,14 +193,14 @@ def generate_tookup():
 def search():
     import nmslib
 
-    input = "flood defences".lower().split()
-    ft_model = FastText.load(fasttext_model_name)
+    input = "Darth Sidious".lower().split()
+    ft_model = FastText.load(fasttext_model_path)
 
     index = nmslib.init(method="hnsw", space="cosinesimil")
     index.loadIndex(filename=index_file_path)
     query = [ft_model.wv[vec] for vec in input]
     query = np.mean(query, axis=0)
-    ids_list = list(load_indexes())
+    ids_list = list(load_indexes(None))
     t0 = time.time()
     ids, distances = index.knnQuery(query, k=10)
     t1 = time.time()
@@ -196,3 +208,34 @@ def search():
     for i, j in zip(ids, distances):
         print(round(j, 2))
         print(ids_list[i])
+        print(websites_db.find_one({"_id": ids_list[i]}, {"fixed_url": 1}))
+
+
+fasttext_wiki_base_model = "./data/fasttext_wiki_model/wiki.en.bin"
+fasttext_wiki_our_prepared_model = "./data/fasttext_wiki_model/wiki.our.bin"
+fasttext_wiki_our_trained_model = "./data/fasttext_wiki_model/wiki.our.trained.bin"
+
+
+def prepare_wiki_fasttext():
+    tokenized_corpus = [doc for _, doc in text_from_file()]
+    t = time.time()
+    ft_model = fasttext.load_facebook_model(fasttext_wiki_base_model)
+    t2 = time.time()
+    print(f"Took {t2-t} to load the model")
+    t = time.time()
+    ft_model.build_vocab(tokenized_corpus, update=True)
+    t2 = time.time()
+    print(f"Took {t2-t} to update the corpus the model")
+    ft_model.save(fasttext_wiki_our_prepared_model)
+
+
+def train_prepared_wiki_model():
+    tokenized_corpus = list([doc for _, doc in text_from_file()])
+    t = time.time()
+    ft_model = FastText.load(fasttext_wiki_our_prepared_model)
+    t2 = time.time()
+    print(f"Took {t2-t} to load the model")
+    epoch_logger = EpochLogger()
+    print("Training starts...")
+    ft_model.train(tokenized_corpus, total_examples=len(tokenized_corpus), epochs=5, callbacks=[epoch_logger])
+    ft_model.save(fasttext_wiki_our_trained_model)

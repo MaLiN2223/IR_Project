@@ -1,69 +1,15 @@
 from threading import Thread, Lock
 from typing import List
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, element
 import urllib.request
 from tqdm import tqdm
+from crawler.PagesDownloader import PagesDownloader
+from crawler.PagesParser import PagesParser
+from crawler.RedirectFixer import RedirectFixer
+from crawler.WebsitesProvider import WebsitesProvider, should_map
+from crawler.utils import encode_url, normalize_url
 from src.storage.database import websites_db
-import hashlib
 import time
-
-
-class PagesDownloader:
-    def get_page(self, url: str):
-        try:
-            return urllib.request.urlopen(url)
-        except Exception as ex:
-            print(url, ex)
-            raise ex
-
-
-class PagesParser:
-    def extract_linkes(self, soup: BeautifulSoup) -> List[str]:
-        links = []
-        for link in soup.findAll("a"):
-            url = link.get("href")
-            if url is not None:
-                links.append(url)
-        return links
-
-
-page_url_should_not_contain = [
-    "action=edit",
-    "diff=10",
-    "?action=purge",
-    "?oldid=",
-    "Wookieepedia_talk:",
-    "?action=history",
-    "/Talk:",
-    "/File:",
-    "Special:",
-    "?redirect",
-    "Wookieepedia:Inq",
-    ":Diff/",
-    "/User:",
-    "Wookieepedia:Trash_compactor",
-    "?t=",
-    "/Forum:",
-    "Wookieepedia_Contests_talk:",
-    "/Wookieepedia_Help:",
-    "Category_talk:",
-    "Forum_talk:",
-    "Wookieepedia_Contests:",
-    "/Wookieepedia_Help_talk:",
-    "_talk:",
-]
-
-
-def should_map(url: str):
-    url = normalize_url(url)
-    if url.startswith("starwars.fandom.com/wiki") or url.startswith("wiki/"):
-        lower_url = url.lower()
-        for banned in page_url_should_not_contain:
-            if banned.lower() in lower_url:
-                return False
-        return True
-    else:
-        return False
 
 
 def fix_wookiepedia(url: str):
@@ -77,33 +23,16 @@ def fix_wookiepedia(url: str):
     return url.split("?")[0]
 
 
-def normalize_url(url: str, lower: bool = True):
-    if lower:
-        url = url.lower()
-    url = url.replace("https://", "").replace("http://", "").strip("/")
-    if url.startswith("www."):
-        url = url[4:]
-    url = url.split("#")[0]
-    return url.split("?")[0]
-
-
-def encode_url(url: str):
-    url = normalize_url(url)
-    return hashlib.md5(url.encode()).hexdigest()
-
-
-class WebsitesProvider:
+class WebsitesProviderForFixing:
     def __init__(self) -> None:
         self.database = websites_db
         self.query = {
-            "page_text": {"$exists": False},
+            "page_text": {"$exists": True},
             "leased": {"$exists": False},
             "error_code": {"$exists": False},
-            "fixed_url": {"$not": {"$regex": ".*\\.ogg$"}},
         }
         self.lock = Lock()
         self.database.update_many({"leased": True}, {"$unset": {"leased": True}})
-        # self.database.create_index("leased", sparse=True, unique=False)
 
     def get_pages(self, size: int = 500):
         urls = []
@@ -131,7 +60,7 @@ class WebsitesProvider:
                 if len(urls) == size:
                     break
             self.database.update_many({"_id": {"$in": ids}}, {"$set": {"leased": True}})
-            return urls
+            return ids, urls
 
 
 class Crawler(Thread):
@@ -169,7 +98,7 @@ class Crawler(Thread):
                     continue
 
                 page = BeautifulSoup(page, "html.parser")
-                all_links = parser.extract_linkes(page)
+                all_links = parser.extract_links(page)
 
                 wookiepedia_links = [(fix_wookiepedia(x), x) for x in all_links if x is not None and should_map(x)]
 
@@ -197,7 +126,7 @@ class Crawler(Thread):
                 to_add = {
                     "_id": hashed_base_url,
                     "all_links": all_links,
-                    "page_text": page.find("div", {"id": "content"}).get_text(),
+                    "page_text": parser.get_pure_page_text(page),
                     "html": str(page),
                     "title": page.find("title").get_text().replace("| Wookieepedia | Fandom", "").strip(),
                 }
@@ -217,6 +146,21 @@ def map_wookiepedia():
     print("Starting...")
     for _ in range(10):
         crawler = Crawler(provider)
+        crawler.daemon = True
+        crawler.start()
+        time.sleep(5)
+        threads.append(crawler)
+    print("Accumulated")
+    while is_any_thread_alive(threads):
+        time.sleep(1)
+
+
+def cleanup_redirects():
+    provider = WebsitesProviderForFixing()
+    threads = []
+    print("Starting...")
+    for _ in range(10):
+        crawler = RedirectFixer(provider)
         crawler.daemon = True
         crawler.start()
         time.sleep(5)
