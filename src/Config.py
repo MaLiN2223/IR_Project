@@ -26,6 +26,7 @@ class Config:
         config = configparser.ConfigParser()
         config.read(path)
         self.config = dict(config.items("DEFAULT"))
+
         print("Config has", len(self.config), "keys")
 
     def __getitem__(self, key):
