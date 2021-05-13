@@ -1,0 +1,8 @@
+numpy>=1.19.5
+Flask==1.1.2
+Flask-Cors==3.0.10
+Flask-Limiter==1.4
+Flask-RESTful==0.3.8
+keybert==0.2.0
+rank-bm25==0.2.1
+gensim==4.0.1

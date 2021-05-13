@@ -25,3 +25,9 @@ testpaths = [
 [tool.isort]
 multi_line_output = 3
 profile = "black"
+
+[flake8]
+exclude ='''
+    .git
+    __pycache__
+    '''

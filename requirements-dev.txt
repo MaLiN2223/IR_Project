@@ -1,2 +1,4 @@
 pre-commit
 isort
+git-python
+bumpversion
