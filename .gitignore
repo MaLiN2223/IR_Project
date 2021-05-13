@@ -1,13 +1,12 @@
 
-# Created by https://www.toptal.com/developers/gitignore/api/python,vscode,visualstudiocode
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,vscode,visualstudiocode
+# Created by https://www.toptal.com/developers/gitignore/api/yarn,python,visualstudiocode,react
+# Edit at https://www.toptal.com/developers/gitignore?templates=yarn,python,visualstudiocode,react
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-*.csv
 
 # C extensions
 *.so
@@ -20,8 +19,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -99,6 +96,9 @@ ipython_config.py
 #   install all needed dependencies.
 #Pipfile.lock
 
+# poetry
+#poetry.lock
+
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow
 __pypackages__/
 
@@ -110,8 +110,9 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
-.venv
+# .env
+.env/
+.venv/
 env/
 venv/
 ENV/
@@ -140,8 +141,30 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
+# operating system-related files
+# file properties cache/storage on macOS
+*.DS_Store
+# thumbnail cache on Windows
+Thumbs.db
+
 # profiling data
 .prof
+
+
+### react ###
+.DS_*
+logs
+**/*.backup.*
+**/*.back.*
+
+node_modules
+bower_components
+
+*.sublime*
+
+psd
+thumb
+sketch
 
 ### VisualStudioCode ###
 .vscode/*
@@ -156,10 +179,23 @@ dmypy.json
 .history
 .ionide
 
-### vscode ###
+### yarn ###
+# https://yarnpkg.com/advanced/qa#which-files-should-be-gitignored
 
-# End of https://www.toptal.com/developers/gitignore/api/python,vscode,visualstudiocode
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
 
+# if you are NOT using Zero-installs, then:
+# comment the following lines
+!.yarn/cache
+
+# and uncomment the following lines
+# .pnp.*
+
+# End of https://www.toptal.com/developers/gitignore/api/yarn,python,visualstudiocode,react
 secrets/*
 data/*
 data_out/*
