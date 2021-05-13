@@ -21,3 +21,7 @@ python_files = '*_tests.py'
 testpaths = [
   "tests",
 ]
+
+[tool.isort]
+multi_line_output = 3
+profile = "black"

@@ -1,4 +1,5 @@
 from typing import List
+
 from bs4 import BeautifulSoup, element
 
 
@@ -22,4 +23,4 @@ class PagesParser:
             div.decompose()
         for ref in content.find_all("sup", {"class": "reference"}):
             ref.decompose()
-        return page.get_text()
+        return content.get_text()

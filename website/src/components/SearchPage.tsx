@@ -1,34 +1,63 @@
 import React, { Component } from 'react';
+import SearchResults, { SearchResponse } from './SearchResults';
 import axios from 'axios';
 
+import { Navbar, Nav, Form, NavDropdown, FormControl, Button } from 'react-bootstrap/'
+
 let urlPath = "http://127.0.0.1:5000/engine/"
+let suggestionEndpoint = "http://127.0.0.1:5000/suggestion/"
 
 interface ISearchQuery {
     q: string;
+    debugMode: boolean;
 }
 
-const defaultQuery: ISearchQuery[] = [];
+type SearchState = {
+    value: string,
+    results: Array<SearchResponse>,
+    submitSuccess: boolean
 
+}
 
-export default class SearchPage extends React.Component<{}, { [key: string]: string }> {
-    constructor(props: Readonly<{}>) {
+export default class SearchPage extends React.Component<{}, SearchState> {
+    constructor(props: Readonly<any>) {
         super(props);
-        this.state = { value: '' };
+        this.state = { value: '', results: [], submitSuccess: true };
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
     private handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         this.setState({ value: event.target.value });
+        this.getSuggestions();
     }
 
     private async handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
+        this.sendForm();
+    }
+
+    private async sendForm() {
         if (this.validateForm()) {
             const submitSuccess: boolean = await this.submitForm();
-            //this.setState({ submitSuccess });
+            this.setState({ submitSuccess });
+        }
+        else {
+            // TODO: failue
         }
     }
+
+    private async getSuggestions() {
+        if (this.validateSuggestion()){
+            // TODO: call suggestions endpoint
+        }
+
+    }
+    private validateSuggestion() {
+        // TODO:
+        return true;
+    }
+
     private validateForm(): boolean {
         // TODO - validate form
         return true;
@@ -38,9 +67,18 @@ export default class SearchPage extends React.Component<{}, { [key: string]: str
         // TODO - submit the form
         console.log("Submitting" + this.state.value)
         axios
-            .get<ISearchQuery[]>(urlPath + this.state.value)
+            .get<SearchResponse[]>(urlPath + this.state.value, {
+                params: {
+                    debugMode: 'false',
+                    bm25: 'true',
+                }
+            })
             .then(response => {
                 console.log(response)
+                this.setState({ results: response.data })
+            })
+            .catch(x => {
+                return false;
             })
             ;
         return true;
@@ -49,16 +87,12 @@ export default class SearchPage extends React.Component<{}, { [key: string]: str
     render() {
         return (
             <div>
-                <div className='main-content'>
-                    {/* <Typography>{this.state.searchItem}</Typography> */}
-                    <form onSubmit={this.handleSubmit} noValidate={true}>
-                        <label>
-                            Name:
-                            <input type="text" value={this.state.value} onChange={this.handleChange} />
-                        </label>
-                        <input type="submit" value="Submit" />
-                    </form>
-                </div>
+                <div>
+                    <Form inline onSubmit={this.handleSubmit}>
+                        <FormControl type="text" placeholder="Search" className="mr-sm-2" value={this.state.value} onChange={this.handleChange} />
+                        <Button variant="outline-success" type="submit">Search</Button>
+                    </Form>
+                    <SearchResults results={this.state.results} /></div>
             </div>
         );
     }

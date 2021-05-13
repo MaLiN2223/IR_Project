@@ -1,7 +1,9 @@
 from threading import Thread
+
 from tqdm import tqdm
-from crawler.Crawler import WebsitesProviderForFixing
-from crawler.PagesDownloader import PagesDownloader
+
+from src.crawler.PagesDownloader import PagesDownloader
+from src.crawler.WebsitesProviderForFixing import WebsitesProviderForFixing
 from src.storage.database import websites_db
 
 

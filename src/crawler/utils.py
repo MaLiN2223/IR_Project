@@ -14,3 +14,7 @@ def normalize_url(url: str, lower: bool = True):
 def encode_url(url: str):
     url = normalize_url(url)
     return hashlib.md5(url.encode()).hexdigest()
+
+
+def is_any_thread_alive(threads):
+    return True in [t.is_alive() for t in threads]
