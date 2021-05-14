@@ -4,8 +4,18 @@ import axios from 'axios';
 
 import { Navbar, Nav, Form, NavDropdown, FormControl, Button } from 'react-bootstrap/'
 
-let urlPath = "http://127.0.0.1:5000/engine/"
-let suggestionEndpoint = "http://127.0.0.1:5000/suggestion/"
+function getBaseUrlPath() {
+    const production = process.env.NODE_ENV === 'production'
+    return production ? 'http://40.114.208.172:8443/' : 'http://127.0.0.1:5000/'
+}
+
+//let urlPath = "http://127.0.0.1:5000/engine/"
+let urlPath = getBaseUrlPath() + "engine"
+let suggestionEndpoint = getBaseUrlPath() + "suggestion/"
+
+console.log(urlPath)
+
+
 
 interface ISearchQuery {
     q: string;
@@ -48,7 +58,7 @@ export default class SearchPage extends React.Component<{}, SearchState> {
     }
 
     private async getSuggestions() {
-        if (this.validateSuggestion()){
+        if (this.validateSuggestion()) {
             // TODO: call suggestions endpoint
         }
 
