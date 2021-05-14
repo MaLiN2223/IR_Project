@@ -3,6 +3,7 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
+import git
 import numpy as np
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -20,6 +21,14 @@ from src.storage.database import websites_db
 app = Flask(__name__)
 api = Api(app)
 CORS(app)
+
+
+def load_version() -> str:
+    with open("VERSION.txt", "r") as f:
+        return f.read()
+
+
+APP_VERSION = git.Repo().head.object.hexsha[:7]  # + " " + str(git.Repo().head.object.authored_date)
 
 
 @dataclass
@@ -189,5 +198,11 @@ class Admin(Resource):
         return "admin!"
 
 
+class Metadata(Resource):
+    def get(self):
+        return APP_VERSION
+
+
 api.add_resource(SearchEngine, "/engine/<string:query>")
 api.add_resource(Admin, "/admin/")
+api.add_resource(Metadata, "/metadata/version")

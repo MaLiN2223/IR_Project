@@ -1,13 +1,4 @@
 repos:
-  - repo: local
-    hooks:
-      - id: version_bump
-        name: version bump
-        entry: python ./scripts/bump_version.py
-        types: [python]
-        language: python
-        pass_filenames: false
-        additional_dependencies: [gitpython]
   - repo: https://github.com/psf/black
     rev: 20.8b1
     hooks:

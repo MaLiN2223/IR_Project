@@ -3,15 +3,10 @@ import SearchResults, { SearchResponse } from './SearchResults';
 import axios from 'axios';
 
 import { Navbar, Nav, Form, NavDropdown, FormControl, Button } from 'react-bootstrap/'
+import { baseUrl } from '../consts';
 
-function getBaseUrlPath() {
-    const production = process.env.NODE_ENV === 'production'
-    return production ? 'http://40.114.208.172:8443/' : 'http://127.0.0.1:5000/'
-}
-
-//let urlPath = "http://127.0.0.1:5000/engine/"
-let urlPath = getBaseUrlPath() + "engine"
-let suggestionEndpoint = getBaseUrlPath() + "suggestion/"
+let urlPath = baseUrl + "engine/"
+let suggestionEndpoint = baseUrl + "suggestion/"
 
 console.log(process.env.NODE_ENV)
 
