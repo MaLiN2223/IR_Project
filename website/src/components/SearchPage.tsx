@@ -13,7 +13,7 @@ function getBaseUrlPath() {
 let urlPath = getBaseUrlPath() + "engine"
 let suggestionEndpoint = getBaseUrlPath() + "suggestion/"
 
-console.log(urlPath)
+console.log(process.env.NODE_ENV)
 
 
 
