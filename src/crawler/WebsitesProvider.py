@@ -52,6 +52,7 @@ class DataProvider:
         fields_to_download: List[str] = [],
         additional_query_params: Optional[Dict[str, Any]] = None,
         should_count: bool = False,
+        no_cursor_timeout: bool = False,
     ) -> None:
         self.database = websites_db
         query = {}
@@ -68,7 +69,7 @@ class DataProvider:
         count = self.database.count_documents(query) if should_count else 218341  # TODO: maybe it is not performant?
         print(f"Counted : {count}, cursor initialization...")
 
-        self.cursor = self.database.find(query, to_download)
+        self.cursor = self.database.find(query, to_download, no_cursor_timeout=no_cursor_timeout)
         self.pbar = tqdm(total=count, desc="documents_iteration")
 
         # self.database.update_many({"leased": True}, {"$unset": {"leased": True}})
@@ -77,15 +78,17 @@ class DataProvider:
         data = []
         with self.lock:
             for item in self.cursor:
-                if len(data) == self.batch_size:
-                    break
                 data.append(item)
+                if len(data) >= self.batch_size:
+                    break
             self.pbar.update(len(data))
             return data
 
 
 class WebsitesProvider:
-    def __init__(self, override_query: Optional[Dict[str, Any]] = None, special_fields: Optional[List[str]] = None) -> None:
+    def __init__(
+        self, override_query: Optional[Dict[str, Any]] = None, special_fields: Optional[List[str]] = None, no_cursor_timeout: bool = False
+    ) -> None:
         self.database = websites_db
         self.query = {
             "page_text": {"$exists": False},

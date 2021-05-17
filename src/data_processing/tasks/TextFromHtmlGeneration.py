@@ -12,8 +12,15 @@ from src.storage.database import websites_db
 
 class DataProviderForTextFromHtmlGeneration(DataProvider):
     def __init__(self) -> None:
-        override_query = {"error_code": {"$exists": False}, "html": {"$exists": True}, "text_generation_version": {"$exists": False}}
-        super().__init__(1, fields_to_download=["_id", "html"], additional_query_params=override_query, should_count=True)
+        override_query = {
+            "error_code": {"$exists": False},
+            "html": {"$exists": True},
+            "$or": [
+                {"text_generation_version": {"$exists": False}},
+                {"text_generation_version": {"$eq": 1}},
+            ],
+        }
+        super().__init__(300, fields_to_download=["_id", "html"], additional_query_params=override_query, should_count=True)
 
 
 class TextFromHtmlGeneration(Thread):
@@ -23,7 +30,6 @@ class TextFromHtmlGeneration(Thread):
 
     def run(self) -> None:
         parser = PagesParser()
-        # pipeline = Pipeline(stopwords=set(stopwords.words("english")))
         while True:
             urls = self.provider.get_records()
             if len(urls) == 0:
@@ -34,6 +40,5 @@ class TextFromHtmlGeneration(Thread):
                 id = document["_id"]
                 page = BeautifulSoup(html, "html.parser")
                 page_text = parser.get_pure_page_text(page)
-                # processed_text = list(pipeline.pipe(page_text))
-                bulk.find({"_id": id}).update_one({"$set": {"page_text": page_text, "text_generation_version": 1}})
+                bulk.find({"_id": id}).update_one({"$set": {"page_text": page_text, "text_generation_version": 2}})
             bulk.execute()

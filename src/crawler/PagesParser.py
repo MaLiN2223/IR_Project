@@ -13,14 +13,14 @@ class PagesParser:
         return links
 
     def get_pure_page_text(self, page: BeautifulSoup) -> str:
+        class_to_remove = ["references-small", "mw-references-wrap", "mobile-hide", "printfooter", "noprint", "pBody", "reference", "external text"]
 
         content: element.Tag = page.find("div", {"id": "content"})
-        for div in content.find_all(class_="noprint"):
-            div.decompose()
-        for div in content.find_all(class_="printfooter"):
-            div.decompose()
-        for div in content.find_all("div", {"class": "mobile-hide"}):
-            div.decompose()
         for ref in content.find_all("sup", {"class": "reference"}):
             ref.decompose()
+
+        for _class in class_to_remove:
+            for div in content.find_all(class_=_class):
+                div.decompose()
+
         return content.get_text()

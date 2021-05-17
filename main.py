@@ -1,5 +1,6 @@
-from src.crawler.tasks import recompute_processed_text, recompute_text
+from src.crawler.tasks import recompute_processed_text
 from src.data_processing.normalization import (
+    direct_logs_to_console,
     dump_corpus_to_file,
     generate_cleaned_text,
     generate_fasttext_vectors,
@@ -11,17 +12,24 @@ from src.data_processing.normalization import (
     train_fasttext,
     train_prepared_wiki_model,
 )
+from src.data_processing.tasks.tasks import (
+    add_keywords,
+    encode_preprocessed_text,
+    recompute_text,
+    summarise,
+)
 
 
 def compute_index():
-    dump_corpus_to_file()
-    prepare_dictionary()
-    generate_tfidf()
-    train_fasttext()
+    direct_logs_to_console()
+    # dump_corpus_to_file()
+    # prepare_dictionary()
+    # generate_tfidf()
+    train_fasttext(300, "ft", "fasttext_300.model", generate_tmp_file=False)
     # generate_weighted_vectors()
-    generate_fasttext_vectors()
-    generate_tookup()
-    search()
+    # generate_fasttext_vectors()
+    # generate_tookup()
+    # search()
 
 
 # # map_wookiepedia()
@@ -35,3 +43,10 @@ def compute_index():
 # recompute_processed_text()
 
 #
+# summarise()
+
+# recompute_text()
+# add_keywords()
+
+# compute_index()
+encode_preprocessed_text()

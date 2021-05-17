@@ -1,26 +1,59 @@
-from typing import Iterable, List, Tuple
 import pickle
-from src.index.utils import load_indexes
-from src.index.preprocessing_pipeline import Pipeline
-from src.storage.database import websites_db
-from tqdm import tqdm
-from gensim.corpora import Dictionary
-from nltk.corpus import stopwords
-from gensim.models import fasttext
-from gensim.models.fasttext import FastText
-from gensim import models
-from gensim.models.callbacks import CallbackAny2Vec
-import numpy as np
 import time
+from pathlib import Path
+from typing import Iterable, List, Tuple
+
+import numpy as np
+from gensim import models
+from gensim.corpora import Dictionary
+from gensim.models import fasttext
+from gensim.models.callbacks import CallbackAny2Vec
+from gensim.models.fasttext import FastText
+from nltk.corpus import stopwords
+from sklearn.metrics.pairwise import cosine_similarity
+from tqdm import tqdm
+
 from src.index.contants import (
+    dict_path,
     dump_file_path,
     dump_ids_file_path,
     fasttext_model_path,
-    dict_path,
     index_file_path,
-    vectors_file_path,
     tfidf_model_name,
+    vectors_file_path,
 )
+from src.index.preprocessing_pipeline import Pipeline
+from src.index.utils import load_indexes
+from src.storage.database import websites_db
+
+total_docs = 218341
+
+
+def direct_logs_to_console():
+    import logging
+    import sys
+
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    handler.setFormatter(formatter)
+    root.addHandler(handler)
+
+
+def test_model(model):
+    d = []
+    for input in ["lord vader", "anakin skywalker", "palpatine", "darth bane", "obiwan kenobi"]:
+        print(f"Most similar to {input}")
+        print(model.wv.most_similar(positive=[input]))
+        input = input.lower().split()
+        query = [model.wv[vec] for vec in input]
+        query = np.mean(query, axis=0)
+        d.append(query)
+    print("Similartities")
+    print(cosine_similarity(d))
 
 
 class EpochLogger(CallbackAny2Vec):
@@ -33,6 +66,7 @@ class EpochLogger(CallbackAny2Vec):
         print("Epoch #{} start".format(self.epoch))
 
     def on_epoch_end(self, model):
+        test_model(model)
         print(f"Epoch #{self.epoch} end, took {time.time()-self.start_time}")
         self.epoch += 1
 
@@ -58,16 +92,16 @@ def text_from_file(split: bool = True):
 
 def pull_text():
     pipeline = Pipeline(set(stopwords.words("english")))
-    total = 230407
-    for record in tqdm(websites_db.find({"page_text": {"$exists": True}}, {"page_text": 1}), desc="pull from db", total=total):
+    for record in tqdm(websites_db.find({"page_text": {"$exists": True}}, {"page_text": 1}), desc="pull from db", total=total_docs):
         text = record["page_text"]
         text = list(pipeline.pipe(text))
         yield text
 
 
 def pull_cleaned_text() -> Tuple[str, List[str]]:
-    total = 230407
-    for record in tqdm(websites_db.find({"processed_text": {"$exists": True}}, {"processed_text": 1}), desc="pull cleaned text from db", total=total):
+    for record in tqdm(
+        websites_db.find({"processed_text": {"$exists": True}}, {"processed_text": 1}), desc="pull cleaned text from db", total=total_docs
+    ):
         yield record["_id"], record["processed_text"]
 
 
@@ -75,7 +109,7 @@ def generate_cleaned_text():
     query = {"page_text": {"$exists": True}, "processed_text": {"$exists": False}}
     pipeline = Pipeline(stopwords=set(stopwords.words("english")))
     bulk_exec = 0
-    total = 228405  # websites_db.count_documents(query)  # 230407
+    total = total_docs  # websites_db.count_documents(query)  # 230407
 
     bulk = websites_db.initialize_unordered_bulk_op()
     for record in tqdm(websites_db.find(query, {"page_text": 1}), desc="text processed", total=total):
@@ -146,22 +180,25 @@ def generate_tfidf():
     model.save(tfidf_model_name)
 
 
-def train_fasttext():
+def train_fasttext(size: int, model_out_dir: str, model_name: str, generate_tmp_file: bool = True):
+    model_out_path = f"./data/{model_out_dir}"
+    tmp_fasttext_file = "./data/storage"
+    Path(model_out_path).mkdir(parents=True, exist_ok=True)
     print("Training fasttext")
-    generate_file = True
     ft_model = FastText(
         sg=1,  # use skip-gram: usually gives better results
-        vector_size=300,  # embedding dimension (default)
+        vector_size=size,  # embedding dimension (default)
         window=10,  # window size: 10 tokens before and 10 tokens after to get wider context
         min_count=5,  # only consider tokens with at least n occurrences in the corpus
-        negative=15,  # negative subsampling: bigger than default to sample negative examples more
+        negative=10,  # negative subsampling: bigger than default to sample negative examples more
         min_n=2,  # min character n-gram
         max_n=5,  # max character n-gram
+        workers=8,
     )
-    tmp_fasttext_file = "./data/storage"
-    if generate_file:
+    print("Generating temp file.")
+    if generate_tmp_file:
         with open(tmp_fasttext_file, "w", encoding="utf-8") as f:
-            for id, sentence in text_from_file():
+            for _, sentence in text_from_file():
                 sentence = " ".join(sentence)
                 try:
                     f.write(sentence + "\n")
@@ -171,8 +208,8 @@ def train_fasttext():
     ft_model.build_vocab(corpus_file=tmp_fasttext_file)
     total_words = ft_model.corpus_total_words
     epoch_logger = EpochLogger()
-    ft_model.train(corpus_file=tmp_fasttext_file, total_words=total_words, epochs=5, callbacks=[epoch_logger])
-    ft_model.save(fasttext_model_path)
+    ft_model.train(corpus_file=tmp_fasttext_file, total_examples=218341, total_words=total_words, epochs=5, callbacks=[epoch_logger])
+    ft_model.save(model_out_path + "/" + model_name)
 
 
 def generate_tookup():
