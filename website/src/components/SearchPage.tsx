@@ -2,15 +2,15 @@ import React, { Component } from 'react';
 import SearchResults, { SearchResponse } from './SearchResults';
 import axios from 'axios';
 
-import { Navbar, Nav, Form, NavDropdown, FormControl, Button } from 'react-bootstrap/'
+import { Navbar, Nav, Form, NavDropdown, FormControl, Button, FormCheck } from 'react-bootstrap/'
 import { baseUrl } from '../consts';
+import { Container, Row, Col } from "react-bootstrap"
+
 
 let urlPath = baseUrl + "engine/"
 let suggestionEndpoint = baseUrl + "suggestion/"
 
 console.log(process.env.NODE_ENV)
-
-
 
 interface ISearchQuery {
     q: string;
@@ -19,21 +19,35 @@ interface ISearchQuery {
 
 type SearchState = {
     value: string,
+    keywords: string,
     results: Array<SearchResponse>,
-    submitSuccess: boolean
-
+    submitSuccess: boolean,
+    show_scores: boolean,
+    show_debug: boolean,
+    is_debug: boolean
 }
 
 export default class SearchPage extends React.Component<{}, SearchState> {
     constructor(props: Readonly<any>) {
         super(props);
-        this.state = { value: '', results: [], submitSuccess: true };
+        const isDebug = new URL(window.location.href).searchParams.get('debug') === 'true';
+        this.state = { value: '', results: [], submitSuccess: true, show_scores: false, is_debug: isDebug, show_debug: false, keywords: '' };
+
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.onChangeShowScores = this.onChangeShowScores.bind(this);
+        this.handleKeywordsChange = this.handleKeywordsChange.bind(this);
+        this.onChangeShowDebugInfo = this.onChangeShowDebugInfo.bind(this);
     }
+
     private handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         this.setState({ value: event.target.value });
+        this.getSuggestions();
+    }
+
+    private handleKeywordsChange(event: React.ChangeEvent<HTMLInputElement>) {
+        this.setState({ keywords: event.target.value });
         this.getSuggestions();
     }
 
@@ -70,12 +84,14 @@ export default class SearchPage extends React.Component<{}, SearchState> {
 
     private async submitForm(): Promise<boolean> {
         // TODO - submit the form
-        console.log("Submitting" + this.state.value)
+        const { is_debug, keywords, value } = this.state;
+
         axios
-            .get<SearchResponse[]>(urlPath + this.state.value, {
+            .get<SearchResponse[]>(urlPath + value, {
                 params: {
-                    debugMode: 'false',
+                    debug: is_debug ? 'true' : 'false',
                     bm25: 'true',
+                    keywords: keywords
                 }
             })
             .then(response => {
@@ -89,16 +105,63 @@ export default class SearchPage extends React.Component<{}, SearchState> {
         return true;
     }
 
+    private onChangeShowScores(event: React.ChangeEvent<HTMLInputElement>) {
+        this.setState({ show_scores: event.target.checked });
+    }
+    private onChangeShowDebugInfo(event: React.ChangeEvent<HTMLInputElement>) {
+        this.setState({ show_debug: event.target.checked });
+    }
+
     render() {
+        const { show_scores, results, is_debug } = this.state;
+        const modifiedScores = [...results].sort((n1: SearchResponse, n2: SearchResponse) => (n2.modified_score - n1.modified_score))//.slice(0, 10);
+        console.log(modifiedScores.length)
+        const realScores = [...results].sort((n1: SearchResponse, n2: SearchResponse) => (n2.score - n1.score))//.slice(0, 10);
+
         return (
-            <div>
-                <div>
-                    <Form inline onSubmit={this.handleSubmit}>
-                        <FormControl type="text" placeholder="Search" className="mr-sm-2" value={this.state.value} onChange={this.handleChange} />
-                        <Button variant="outline-success" type="submit">Search</Button>
-                    </Form>
-                    <SearchResults results={this.state.results} /></div>
-            </div>
+            <Container >
+
+                <Form onSubmit={this.handleSubmit}>
+                    <Row>
+                        <Form.Label column sm="1">Keywords</Form.Label>
+                        <Col sm="11">
+                            <FormControl type="text" placeholder="Comma separated keywords" className="mr-sm-2" value={this.state.keywords} onChange={this.handleKeywordsChange} />
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Form.Label column sm="1">Search phrase</Form.Label>
+                        <Col md={is_debug ? 9 : 10}>
+                            <FormControl type="text" placeholder="Search phrase" className="mr-sm-2" value={this.state.value} onChange={this.handleChange} />
+                            <Button variant="outline-success" type="submit">Search</Button>
+
+                        </Col>
+                        <Col md={1}>
+                            <Form.Check
+                                type="checkbox"
+                                label="Show scores"
+                                onChange={this.onChangeShowScores}
+                            />
+                        </Col>
+                        {is_debug ?
+                            <Col md={1}>
+                                <Form.Check
+                                    type="checkbox"
+                                    label="Show debug info"
+                                    onChange={this.onChangeShowDebugInfo}
+                                />
+                            </Col> : ""}
+                    </Row>
+                </Form>
+                <Row className="show-grid">
+                    <Col xs={2} md={6}>
+                        <SearchResults results={realScores} title="Original BM25 results" show_scores={show_scores} />
+                    </Col>
+                    <Col xs={2} md={6}>
+                        <SearchResults results={modifiedScores} title="Modified results" show_scores={show_scores} />
+                    </Col>
+                </Row>
+
+            </Container >
         );
     }
 }
