@@ -3,7 +3,6 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
-import git
 import numpy as np
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -29,7 +28,7 @@ CORS(app)
 stop_words = stopwords.words("english")
 
 
-APP_VERSION = git.Repo().head.object.hexsha[:7]
+APP_VERSION = "000"  # git.Repo().head.object.hexsha[:7]
 
 
 @app.errorhandler(404)
