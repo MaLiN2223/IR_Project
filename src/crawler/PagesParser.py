@@ -16,6 +16,9 @@ class PagesParser:
         class_to_remove = ["references-small", "mw-references-wrap", "mobile-hide", "printfooter", "noprint", "pBody", "reference", "external text"]
 
         content: element.Tag = page.find("div", {"id": "content"})
+        if content is None:
+            print("No content!")
+            return None
         for ref in content.find_all("sup", {"class": "reference"}):
             ref.decompose()
 

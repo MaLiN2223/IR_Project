@@ -1,6 +1,10 @@
 import time
 
 from src.crawler.utils import is_any_thread_alive
+from src.data_processing.tasks.DownloadPagesTask import (
+    DataProviderForDownloadPagesTask,
+    DownloadPagesTask,
+)
 from src.data_processing.tasks.EncodeProcessedTextTask import (
     DataProviderForEncodeProcessedTextTask,
     EncodeProcessedTextTask,
@@ -17,6 +21,21 @@ from src.data_processing.tasks.XLSummarizationTask import (
     DataProviderForXlSummarizationTask,
     XlSummarizationTask,
 )
+
+
+def map_wookiepedia():
+    provider = DataProviderForDownloadPagesTask()
+    threads = []
+    print("Starting...")
+    for _ in range(5):
+        crawler = DownloadPagesTask(provider)
+        crawler.daemon = True
+        crawler.start()
+        time.sleep(5)
+        threads.append(crawler)
+    print("Accumulated")
+    while is_any_thread_alive(threads):
+        time.sleep(1)
 
 
 def recompute_text():
@@ -68,7 +87,7 @@ def add_keywords():
 
 
 def encode_preprocessed_text():
-    threads_count = 2
+    threads_count = 1
     provider = DataProviderForEncodeProcessedTextTask()
     threads = []
     print("Starting text processing")

@@ -66,7 +66,7 @@ class DataProvider:
         print("Query", query)
         print("To download", to_download)
         print("Counting...")
-        count = self.database.count_documents(query) if should_count else 218341  # TODO: maybe it is not performant?
+        count = self.database.count_documents(query) if should_count else 219719  # TODO: maybe it is not performant?
         print(f"Counted : {count}, cursor initialization...")
 
         self.cursor = self.database.find(query, to_download, no_cursor_timeout=no_cursor_timeout)

@@ -13,8 +13,9 @@ class DataProviderForEncodeProcessedTextTask(DataProvider):
         override_query = {
             "error_code": {"$exists": False},
             "processed_text": {"$exists": True},
+            "encoded_processed_text": {"$exists": False},
         }
-        super().__init__(1000, fields_to_download=["_id", "processed_text"], additional_query_params=override_query, should_count=True)
+        super().__init__(1000, fields_to_download=["_id", "processed_text"], additional_query_params=override_query, should_count=False)
 
 
 class EncodeProcessedTextTask(Thread):
@@ -30,8 +31,15 @@ class EncodeProcessedTextTask(Thread):
                 break
             bulk = websites_db.initialize_unordered_bulk_op()
             for document in tqdm(urls, desc="thread", leave=False):
-                processed_text = document["processed_text"]
-                id = document["_id"]
-                encoded = np.mean([wiki_ft_model.wv[vec] for vec in processed_text], axis=0)
-                bulk.find({"_id": id}).update_one({"$set": {"encoded_processed_text": encoded}})
+                try:
+                    processed_text = document["processed_text"]
+                    id = document["_id"]
+                    encoded_processed_text = np.mean([wiki_ft_model.wv[vec] for vec in processed_text], axis=0)
+                    if len(processed_text) == 1:
+                        encoded_processed_text = [encoded_processed_text]
+
+                    encoded = list([float(x) for x in encoded_processed_text])
+                    bulk.find({"_id": id}).update_one({"$set": {"encoded_processed_text": encoded}})
+                except Exception as ex:
+                    print(ex, processed_text)
             bulk.execute()

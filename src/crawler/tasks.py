@@ -1,44 +1,31 @@
 import time
 
-from src.crawler.Crawler import Crawler
+# from src.crawler.Crawler import Crawler
 from src.crawler.ProcessingTextGeneration import (
     DataProviderForTextProcessingTask,
     TextProcessingTask,
 )
-from src.crawler.RedirectFixer import RedirectFixer
+
+# from src.crawler.RedirectFixer import RedirectFixer
 from src.crawler.utils import is_any_thread_alive
-from src.crawler.WebsitesProvider import DataProvider, WebsitesProvider
-from src.crawler.WebsitesProviderForFixing import WebsitesProviderForFixing
 
-
-def map_wookiepedia():
-    provider = WebsitesProvider()
-    threads = []
-    print("Starting...")
-    for _ in range(10):
-        crawler = Crawler(provider)
-        crawler.daemon = True
-        crawler.start()
-        time.sleep(5)
-        threads.append(crawler)
-    print("Accumulated")
-    while is_any_thread_alive(threads):
-        time.sleep(1)
+# from src.crawler.WebsitesProvider import DataProvider, WebsitesProvider
 
 
 def cleanup_redirects():
-    provider = WebsitesProviderForFixing()
-    threads = []
-    print("Starting...")
-    for _ in range(10):
-        crawler = RedirectFixer(provider)
-        crawler.daemon = True
-        crawler.start()
-        time.sleep(5)
-        threads.append(crawler)
-    print("Accumulated")
-    while is_any_thread_alive(threads):
-        time.sleep(1)
+    raise NotImplementedError("Below might not work anymore")
+    # provider = WebsitesProviderForFixing()
+    # threads = []
+    # print("Starting...")
+    # for _ in range(10):
+    #     crawler = RedirectFixer(provider)
+    #     crawler.daemon = True
+    #     crawler.start()
+    #     time.sleep(5)
+    #     threads.append(crawler)
+    # print("Accumulated")
+    # while is_any_thread_alive(threads):
+    #     time.sleep(1)
 
 
 def recompute_processed_text():

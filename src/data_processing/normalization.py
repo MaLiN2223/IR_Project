@@ -26,7 +26,7 @@ from src.index.preprocessing_pipeline import Pipeline
 from src.index.utils import load_indexes
 from src.storage.database import websites_db
 
-total_docs = 218341
+total_docs = 219719
 
 
 def direct_logs_to_console():
@@ -82,7 +82,7 @@ def dump_corpus_to_file():
 def text_from_file(split: bool = True):
     with open(dump_ids_file_path, "r", encoding="utf-8") as ids:
         with open(dump_file_path, "r", encoding="utf-8") as f:
-            for id, row in tqdm(zip(ids, f), total=218341):
+            for id, row in tqdm(zip(ids, f), total=total_docs):
                 if split:
                     splitted = row.strip().split(" ")
                     yield (id, splitted)
@@ -103,27 +103,6 @@ def pull_cleaned_text() -> Tuple[str, List[str]]:
         websites_db.find({"processed_text": {"$exists": True}}, {"processed_text": 1}), desc="pull cleaned text from db", total=total_docs
     ):
         yield record["_id"], record["processed_text"]
-
-
-def generate_cleaned_text():
-    query = {"page_text": {"$exists": True}, "processed_text": {"$exists": False}}
-    pipeline = Pipeline(stopwords=set(stopwords.words("english")))
-    bulk_exec = 0
-    total = total_docs  # websites_db.count_documents(query)  # 230407
-
-    bulk = websites_db.initialize_unordered_bulk_op()
-    for record in tqdm(websites_db.find(query, {"page_text": 1}), desc="text processed", total=total):
-        text = record["page_text"]
-        page_id = record["_id"]
-        processed_text = list(pipeline.pipe(text))
-        bulk.find({"_id": page_id}).update_one({"$set": {"processed_text": processed_text}})
-        bulk_exec += 1
-        if bulk_exec > 1000:
-            bulk_exec = 0
-            bulk.execute()
-            bulk = websites_db.initialize_unordered_bulk_op()
-    if bulk_exec > 0:
-        bulk.execute()
 
 
 def prepare_dictionary():
@@ -208,7 +187,7 @@ def train_fasttext(size: int, model_out_dir: str, model_name: str, generate_tmp_
     ft_model.build_vocab(corpus_file=tmp_fasttext_file)
     total_words = ft_model.corpus_total_words
     epoch_logger = EpochLogger()
-    ft_model.train(corpus_file=tmp_fasttext_file, total_examples=218341, total_words=total_words, epochs=5, callbacks=[epoch_logger])
+    ft_model.train(corpus_file=tmp_fasttext_file, total_examples=total_docs, total_words=total_words, epochs=5, callbacks=[epoch_logger])
     ft_model.save(model_out_path + "/" + model_name)
 
 

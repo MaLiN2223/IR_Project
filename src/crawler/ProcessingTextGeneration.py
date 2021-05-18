@@ -16,7 +16,10 @@ class DataProviderForTextProcessingTask(DataProvider):
             "error_code": {"$exists": False},
             "page_text": {"$exists": True},
             "text_generation_version": {"$eq": 2},
-            "processed_text_version": {"$exists": 2},
+            "$or": [
+                {"processed_text_version": {"$exists": False}},
+                {"processed_text_version": {"$eq": 2}},
+            ],
         }
         super().__init__(100, fields_to_download=["_id", "page_text"], additional_query_params=override_query, should_count=False)
 

@@ -3,8 +3,17 @@ from threading import Thread
 from tqdm import tqdm
 
 from src.crawler.PagesDownloader import PagesDownloader
-from src.crawler.WebsitesProviderForFixing import WebsitesProviderForFixing
+from src.crawler.WebsitesProvider import DataProvider
 from src.storage.database import websites_db
+
+
+class WebsitesProviderForFixing(DataProvider):
+    def __init__(self) -> None:
+        override_query = {
+            "leased": {"$exists": False},
+            "error_code": {"$exists": False},
+        }
+        super().__init__(100, fields_to_download=["_id", "page_text"], additional_query_params=override_query, should_count=False)
 
 
 class RedirectFixer(Thread):
@@ -16,10 +25,12 @@ class RedirectFixer(Thread):
         downloader = PagesDownloader()
         print("Starting...")
         while True:
-            urls = self.provider.get_pages()
+            urls = self.provider.get_records()
             if len(urls) == 0:
                 break
-            for id, url in tqdm(zip(*urls), desc="urls for fixer"):
+            for document in tqdm(urls, desc="urls for fixer"):
+                id = document["_id"]
+                url = document["fixed_url"]
                 page = downloader.get_page(url)
                 if page.url != url:
                     q = f"{url} | {page.url}"

@@ -22,11 +22,11 @@
     },
     "scripts": {
         "start_local": "@FOR /f \"delims=\" %i in ('git rev-parse --short HEAD') DO set REACT_APP_CURRENT_GIT_SHA=%i &&  react-scripts start",
-        "start_server": "REACT_APP_CURRENT_GIT_SHA=`git rev-parse --short HEAD` react-scripts start",
+        "start_server": "export REACT_APP_CURRENT_GIT_SHA=`git rev-parse --short HEAD` react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject",
-        "start_prod": "REACT_APP_CURRENT_GIT_SHA=`git rev-parse --short HEAD` && export NODE_ENV=production && yarn build && serve -s build"
+        "start_prod": "export REACT_APP_CURRENT_GIT_SHA=`git rev-parse --short HEAD` && export NODE_ENV=production && yarn build && serve -s build"
     },
     "eslintConfig": {
         "extends": [
