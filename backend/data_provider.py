@@ -5,7 +5,8 @@ from gensim.models.fasttext import FastText
 from keybert.model import KeyBERT
 from rank_bm25 import BM25L
 
-from index.utils import load_indexes
+from backend.utils import is_prod
+from src.index.utils import load_indexes
 
 wiki_ft_model = None
 keyword_model: Optional[KeyBERT] = None
@@ -13,12 +14,8 @@ doc_local_id_to_remote_id: Optional[List[str]] = None
 bm25: Optional[BM25L] = None
 
 
-def __is_prod():
-    return False
-
-
 def base_path():
-    if __is_prod():
+    if is_prod():
         return "/datadrive/data/"
     else:
         return "./data/"
