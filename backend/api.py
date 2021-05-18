@@ -32,6 +32,11 @@ stop_words = stopwords.words("english")
 APP_VERSION = git.Repo().head.object.hexsha[:7]
 
 
+@app.errorhandler(404)
+def page_not_found(error):
+    return "This route does not exist {}".format(request.url), 404
+
+
 @dataclass
 class DebugInformation:
     keywords: Optional[List[Tuple[str, float]]]
