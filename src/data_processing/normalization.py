@@ -159,6 +159,15 @@ def generate_tfidf():
     model.save(tfidf_model_name)
 
 
+def generate_bm25():
+    print("Preparing bm25")
+    from rank_bm25 import BM25L
+
+    corpus = [text for id, text in text_from_file()]
+    bm25 = BM25L(corpus)
+    pickle.dump(bm25, open("./data/bm25.pickle", "wb"))
+
+
 def train_fasttext(size: int, model_out_dir: str, model_name: str, generate_tmp_file: bool = True):
     model_out_path = f"./data/{model_out_dir}"
     tmp_fasttext_file = "./data/storage"
@@ -191,7 +200,7 @@ def train_fasttext(size: int, model_out_dir: str, model_name: str, generate_tmp_
     ft_model.save(model_out_path + "/" + model_name)
 
 
-def generate_tookup():
+def generate_lookup():
     import nmslib
 
     weighted_doc_vects = pickle.load(open(vectors_file_path, "rb"))

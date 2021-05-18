@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 
 import git
 import numpy as np
+import rank_bm25
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -94,7 +95,7 @@ def extract_keywords_from_page(page):
 
 class BM25Index(AbstractIndex):
     def __init__(self) -> None:
-        self.bm25 = pickle.load(open("data/bm25.pickle", "rb"))
+        self.bm25: rank_bm25.BM25L = pickle.load(open("data/bm25.pickle", "rb"))
 
     def search(self, query: List[str], banned_keywords: List[str], top_n: int, is_debug: bool):
         doc_scores = self.bm25.get_scores(query)
