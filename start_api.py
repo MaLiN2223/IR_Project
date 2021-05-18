@@ -5,6 +5,7 @@ from OpenSSL import SSL
 from backend.api import app
 
 is_prod = os.environ["FLASK_ENV"] == "production"
+print("Environment", os.environ["FLASK_ENV"])
 
 if __name__ == "__main__":
     if is_prod:
