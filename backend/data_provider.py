@@ -24,21 +24,27 @@ def base_path():
 def load_bm25():
     global bm25
     if bm25 is None:
+        print("Loading bm25")
         bm25 = pickle.load(open(base_path() + "bm25.pickle", "rb"))
+        print("Loaded bm25")
     return bm25
 
 
 def get_wiki_ft_model():
     global wiki_ft_model
     if wiki_ft_model is None:
+        print("getting wiki model")
         wiki_ft_model = FastText.load(f"{base_path()}fasttext_300.model")
+        print("Wiki model loaded")
     return wiki_ft_model
 
 
 def get_keyword_model():
     global keyword_model
     if keyword_model is None:
+        print("Getting keyword model")
         keyword_model = KeyBERT("xlm-r-distilroberta-base-paraphrase-v1")
+        print("Keyword model loaded")
     return keyword_model
 
 

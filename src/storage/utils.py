@@ -1,4 +1,5 @@
 import pymongo
+
 from src.Config import Config
 
 config = Config()
@@ -6,6 +7,6 @@ config = Config()
 
 def get_mongo_connection():
     myclient = pymongo.MongoClient(
-        host=config["remotepath"]
+        host=config["remotepath"], connect=False
     )  # , authSource="dissertation", username=config["username"], password=config["password"])
     return myclient["IR"]
