@@ -119,68 +119,74 @@ export default class SearchPage extends React.Component<{}, SearchState> {
         this.setState({ show_debug: event.target.checked });
     }
 
+    getForm() {
+        const { is_debug, temperature } = this.state;
+        return (
+            <Form onSubmit={this.handleSubmit}>
+                <Row>
+                    <Form.Label column sm="1">Keywords</Form.Label>
+                    <Col sm="11">
+                        <FormControl type="text" placeholder="Comma separated keywords" className="mr-sm-2" value={this.state.keywords} onChange={this.handleKeywordsChange} />
+                    </Col>
+                </Row>
+                <Row>
+                    <Form.Label column sm="1">Phrase</Form.Label>
+                    <Col md={is_debug ? 9 : 11}>
+                        <FormControl required type="text" placeholder="Search phrase" className="mr-sm-2" value={this.state.value} onChange={this.handleChange} />
+                        <Button variant="outline-success" type="submit">Search</Button>
+
+                    </Col>
+                    {is_debug ? <Form.Label column sm="1">Temp</Form.Label> : ""}
+                    {is_debug ? <Col md={1}>
+
+                        <FormControl
+                            type="number"
+                            step={0.1}
+                            value={temperature}
+                            onChange={this.onChangeTemperature}
+                            className="mr-sm-2"
+                        />
+                    </Col> : ""}
+                </Row>
+                <Row>
+                    <Col md={1}>Display control:</Col>
+                    <Col md={1}>
+                        <Form.Check
+                            type="checkbox"
+                            label="scores"
+                            onChange={this.onChangeShowScores}
+                        />
+                    </Col>
+                    {is_debug ?
+                        <Col md={9}>
+                            <Row>
+                                <Col md={2}>
+                                    <Form.Check
+                                        type="checkbox"
+                                        label="debug"
+                                        onChange={this.onChangeShowDebugInfo}
+                                    />
+                                </Col>
+                            </Row>
+                        </Col> : ""}
+                </Row>
+            </Form>
+        )
+    }
+
     render() {
-        const { show_scores, results, is_debug, temperature, show_debug, error, is_loading } = this.state;
+        const { show_scores, results, show_debug, error, is_loading } = this.state;
 
         const modifiedScores = results === null ? [] : results.modified_responses;
         const realScores = results === null ? [] : results.original_responses;
         const time = results === null ? 0 : results.time;
-
+        const form = this.getForm();
         return (
             <Container >
 
                 {error != '' ? <Alert key={0} variant='primary'>{error}</Alert> : ""}
-                <Form onSubmit={this.handleSubmit}>
-                    <Row>
-                        <Form.Label column sm="1">Keywords</Form.Label>
-                        <Col sm="11">
-                            <FormControl type="text" placeholder="Comma separated keywords" className="mr-sm-2" value={this.state.keywords} onChange={this.handleKeywordsChange} />
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Form.Label column sm="1">Phrase</Form.Label>
-                        <Col md={is_debug ? 9 : 11}>
-                            <FormControl type="text" placeholder="Search phrase" className="mr-sm-2" value={this.state.value} onChange={this.handleChange} />
-                            <Button variant="outline-success" type="submit">Search</Button>
-
-                        </Col>
-                        {is_debug ? <Form.Label column sm="1">Temp</Form.Label> : ""}
-                        {is_debug ? <Col md={1}>
-
-                            <FormControl
-                                type="number"
-                                step={0.1}
-                                value={temperature}
-                                onChange={this.onChangeTemperature}
-                                className="mr-sm-2"
-                            />
-                        </Col> : ""}
-                    </Row>
-                    <Row>
-                        <Col md={1}>Display control:</Col>
-                        <Col md={1}>
-                            <Form.Check
-                                type="checkbox"
-                                label="scores"
-                                onChange={this.onChangeShowScores}
-                            />
-                        </Col>
-                        {is_debug ?
-                            <Col md={9}>
-                                <Row>
-                                    <Col md={2}>
-                                        <Form.Check
-                                            type="checkbox"
-                                            label="debug"
-                                            onChange={this.onChangeShowDebugInfo}
-                                        />
-                                    </Col>
-                                </Row>
-                            </Col> : ""}
-                    </Row>
-                </Form>
+                {form}
                 {show_debug && time > 0 ? <Row>Found in {time} seconds</Row> : ""}
-
                 {is_loading && !error ? <Spinner animation="border" /> : ""}
                 {results !== null ?
                     <Row className="show-grid">
