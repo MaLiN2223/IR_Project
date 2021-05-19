@@ -8,30 +8,23 @@ import { Container, Row, Col } from "react-bootstrap"
 
 
 let urlPath = baseUrl + "engine/"
-let suggestionEndpoint = baseUrl + "suggestion/"
-
-console.log(process.env.NODE_ENV)
-
-interface ISearchQuery {
-    q: string;
-    debugMode: boolean;
-}
 
 type SearchState = {
     value: string,
     keywords: string,
-    results: Array<SearchResponse>,
+    results: SearchResponse | null,
     submitSuccess: boolean,
     show_scores: boolean,
     show_debug: boolean,
-    is_debug: boolean
+    is_debug: boolean,
+    temperature: number
 }
 
 export default class SearchPage extends React.Component<{}, SearchState> {
     constructor(props: Readonly<any>) {
         super(props);
         const isDebug = new URL(window.location.href).searchParams.get('debug') === 'true';
-        this.state = { value: '', results: [], submitSuccess: true, show_scores: false, is_debug: isDebug, show_debug: false, keywords: '' };
+        this.state = { value: '', results: null, submitSuccess: true, show_scores: false, is_debug: isDebug, show_debug: false, keywords: '', temperature: 2.0 };
 
 
         this.handleChange = this.handleChange.bind(this);
@@ -39,11 +32,15 @@ export default class SearchPage extends React.Component<{}, SearchState> {
         this.onChangeShowScores = this.onChangeShowScores.bind(this);
         this.handleKeywordsChange = this.handleKeywordsChange.bind(this);
         this.onChangeShowDebugInfo = this.onChangeShowDebugInfo.bind(this);
+        this.onChangeTemperature = this.onChangeTemperature.bind(this);
     }
 
     private handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         this.setState({ value: event.target.value });
         this.getSuggestions();
+    }
+    private onChangeTemperature(event: React.ChangeEvent<HTMLInputElement>) {
+        this.setState({ temperature: Number(event.target.value) });
     }
 
     private handleKeywordsChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -84,14 +81,14 @@ export default class SearchPage extends React.Component<{}, SearchState> {
 
     private async submitForm(): Promise<boolean> {
         // TODO - submit the form
-        const { is_debug, keywords, value } = this.state;
+        const { is_debug, keywords, value, temperature } = this.state;
 
         axios
-            .get<SearchResponse[]>(urlPath + value, {
+            .get<SearchResponse>(urlPath + value, {
                 params: {
                     debug: is_debug ? 'true' : 'false',
-                    bm25: 'true',
-                    keywords: keywords
+                    keywords: keywords,
+                    temperature: temperature
                 }
             })
             .then(response => {
@@ -113,10 +110,11 @@ export default class SearchPage extends React.Component<{}, SearchState> {
     }
 
     render() {
-        const { show_scores, results, is_debug } = this.state;
-        const modifiedScores = [...results].sort((n1: SearchResponse, n2: SearchResponse) => (n2.modified_score - n1.modified_score))//.slice(0, 10);
-        console.log(modifiedScores.length)
-        const realScores = [...results].sort((n1: SearchResponse, n2: SearchResponse) => (n2.score - n1.score))//.slice(0, 10);
+        const { show_scores, results, is_debug, temperature, show_debug } = this.state;
+
+        const modifiedScores = results === null ? [] : results.modified_responses;
+        const realScores = results === null ? [] : results.original_responses;
+        const time = results === null ? 0 : results.time;
 
         return (
             <Container >
@@ -129,35 +127,55 @@ export default class SearchPage extends React.Component<{}, SearchState> {
                         </Col>
                     </Row>
                     <Row>
-                        <Form.Label column sm="1">Search phrase</Form.Label>
-                        <Col md={is_debug ? 9 : 10}>
+                        <Form.Label column sm="1">Phrase</Form.Label>
+                        <Col md={is_debug ? 9 : 11}>
                             <FormControl type="text" placeholder="Search phrase" className="mr-sm-2" value={this.state.value} onChange={this.handleChange} />
                             <Button variant="outline-success" type="submit">Search</Button>
 
                         </Col>
+                        {is_debug ? <Form.Label column sm="1">Temp</Form.Label> : ""}
+                        {is_debug ? <Col md={1}>
+
+                            <FormControl
+                                type="number"
+                                step={0.1}
+                                value={temperature}
+                                onChange={this.onChangeTemperature}
+                                className="mr-sm-2"
+                            />
+                        </Col> : ""}
+                    </Row>
+                    <Row>
+                        <Col md={1}>Display control:</Col>
                         <Col md={1}>
                             <Form.Check
                                 type="checkbox"
-                                label="Show scores"
+                                label="scores"
                                 onChange={this.onChangeShowScores}
                             />
                         </Col>
                         {is_debug ?
-                            <Col md={1}>
-                                <Form.Check
-                                    type="checkbox"
-                                    label="Show debug info"
-                                    onChange={this.onChangeShowDebugInfo}
-                                />
+                            <Col md={9}>
+                                <Row>
+                                    <Col md={2}>
+                                        <Form.Check
+                                            type="checkbox"
+                                            label="debug"
+                                            onChange={this.onChangeShowDebugInfo}
+                                        />
+                                    </Col>
+                                </Row>
                             </Col> : ""}
                     </Row>
                 </Form>
+                {show_debug && time > 0 ? <Row>Found in {time} seconds</Row> : ""}
                 <Row className="show-grid">
+
                     <Col xs={2} md={6}>
-                        <SearchResults results={realScores} title="Original BM25 results" show_scores={show_scores} />
+                        <SearchResults results={realScores} title="Original BM25 results" show_scores={show_scores} is_debug={show_debug} />
                     </Col>
                     <Col xs={2} md={6}>
-                        <SearchResults results={modifiedScores} title="Modified results" show_scores={show_scores} />
+                        <SearchResults results={modifiedScores} title="Modified results" show_scores={show_scores} is_debug={show_debug} />
                     </Col>
                 </Row>
 

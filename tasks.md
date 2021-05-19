@@ -1,21 +1,24 @@
-1. Reprioritize tasks
-2. <s>Add certificate "redirects"</s>
-3. Retrain fasttext model
-4. empty vocabulary; perhaps the documents only contain stop words for summarize
-5. Recompute summarize
-6. Check for empty `preprocessed_text`
-7. Check price for one day azure
-8. Upload mongodb *reduced* database
-9. Cleanup github
-10. Update requirements.txt and requirements-dev.txt
-11. Black/flake -like things for tsx
-12. Test keyword values
-13. Optimize speed (i.e. precompute keywords vectors)
-14. tests?
-15. Debug values passed and displayed in frontend
-16. Cosmetic changes frontend
-17. Cleanup TODOs
-18. Prepare example queries
-19. 'About' page
-20. 'Home' page
-21. Mobile :(
+1. Backend:
+   1. Debug values returned
+   2. Test keyword values (can we get some good scores out of it?)
+   3. empty vocabulary; perhaps the documents only contain stop words (for summarize)
+   4. Check for empty `preprocessed_text`
+   5. Speed optimization (i.e. precompute keywords vectors)
+
+
+2. Frontend:
+   1. Loading bar
+   2. Mobile check    
+   3. Cosmetic changes frontend
+   4. Ensure frontend has validation for fields (need to be provided) 
+   5. Black/flake -like things for tsx
+   7. Display speed
+
+3. Code quality:
+   1. Cleanup TODOs
+   2. Cleanup github
+   3.  tests?
+
+4. For presentation:
+   1. Prepare example queries
+   2. Add 'About' page

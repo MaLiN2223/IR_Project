@@ -15,7 +15,7 @@ export default class Menu extends React.Component<MenuProps> {
         const NavLinks: any = () => this.props.links.map((link: { name: string, to: string }) => <Nav.Link href={link.to} key={link.name}>{link.name}</Nav.Link>)
         return (
             <Navbar bg="dark" variant="dark">
-                <Navbar.Brand href="/home">Navbar</Navbar.Brand>
+                <Navbar.Brand href="/">Navbar</Navbar.Brand>
                 <Nav className="mr-auto">
                     <NavLinks />
                 </Nav>

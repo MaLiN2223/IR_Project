@@ -24,7 +24,7 @@ class EncodeProcessedTextTask(Thread):
         return super().__init__()
 
     def run(self) -> None:
-        wiki_ft_model = FastText.load("./data/ft/fasttext_300.model")
+        wiki_ft_model = FastText.load("./data/fasttext_300.model")
         while True:
             urls = self.provider.get_records()
             if len(urls) == 0:

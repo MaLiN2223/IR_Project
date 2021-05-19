@@ -2,6 +2,7 @@
 import axios from 'axios';
 import React, { Component } from 'react';
 import { baseUrl } from '../consts';
+import "../styles/footer.css"
 
 
 type FooterState = {
@@ -35,8 +36,9 @@ export default class Footer extends React.Component<{}, FooterState> {
 
     render() {
         console.log(`${process.env.REACT_APP_NAME} ${process.env.REACT_APP_CURRENT_GIT_SHA}`)
-        return (<footer>
+        return (<footer className="footer">
             VERSION: backend {this.state.version} | fontend {process.env.REACT_APP_CURRENT_GIT_SHA}
+            <p style={{ fontSize: '7px', textAlign: "center" }}>Empire did nothing wrong. Long live the Empire!</p>
         </footer>)
 
     }

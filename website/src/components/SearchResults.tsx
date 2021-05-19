@@ -3,18 +3,34 @@ import React, { Component } from 'react';
 import { ListGroup, Card } from 'react-bootstrap'
 
 export type SearchResponse = {
+    original_responses: Array<SearchRecordResponse>
+    modified_responses: Array<SearchRecordResponse>
+    time: number
+}
+
+type DebugInformation = {
+    debug_scores: DebugScores
+}
+type DebugScores = {
+    negative_score: number,
+    processed_text_similarity: number
+}
+
+export type SearchRecordResponse = {
     urlId: string,
     summary: string,
     title: string,
     url: string,
     score: number,
     modified_score: number
+    debugInformation: DebugInformation
 }
 
 type SearchResultsProps = {
-    results: Array<SearchResponse>,
+    results: Array<SearchRecordResponse>,
     title: String,
-    show_scores: boolean
+    show_scores: boolean,
+    is_debug: boolean
 }
 
 export default class SearchResults extends React.Component<SearchResultsProps> {
@@ -29,7 +45,7 @@ export default class SearchResults extends React.Component<SearchResultsProps> {
     }
 
     render() {
-        const { results, title, show_scores } = this.props;
+        const { results, title, show_scores, is_debug } = this.props;
 
         return <div className="container">
             <h1>{title}</h1>
@@ -41,6 +57,7 @@ export default class SearchResults extends React.Component<SearchResultsProps> {
                                 <Card.Title>{result.title}</Card.Title>
                                 <Card.Link href={result.url}>{this.formatUrl(result.url)}</Card.Link>
                                 {show_scores ? <Card.Footer><div>Original score: {result.score}<br /> Modified score: {result.modified_score}</div></Card.Footer> : ""}
+                                {is_debug ? <Card.Footer><div>FT smilarity: {result.debugInformation.debug_scores.processed_text_similarity}<br /> Negative BM: {result.debugInformation.debug_scores.negative_score}</div></Card.Footer> : ""}
                             </Card.Body>
                         </Card>
                     </ListGroup.Item>

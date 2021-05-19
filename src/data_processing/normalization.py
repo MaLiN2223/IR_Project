@@ -1,7 +1,7 @@
 import pickle
 import time
 from pathlib import Path
-from typing import Iterable, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
 from gensim import models
@@ -13,6 +13,7 @@ from nltk.corpus import stopwords
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 
+from backend.data_provider import load_indexes
 from src.index.contants import (
     dict_path,
     dump_file_path,
@@ -23,7 +24,6 @@ from src.index.contants import (
     vectors_file_path,
 )
 from src.index.preprocessing_pipeline import Pipeline
-from src.index.utils import load_indexes
 from src.storage.database import websites_db
 
 total_docs = 219719

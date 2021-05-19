@@ -43,13 +43,13 @@ def initialize_database():
 
 def preprocess_for_extraction():
     summarise()
-    # add_keywords() #
     encode_preprocessed_text()
+    # add_keywords() #
 
 
 # initialize_database()
-compute_index()
+# compute_index()
 
-# preprocess_for_extraction()
+preprocess_for_extraction()
 # Re train wiki model?
 # train_prepared_wiki_model()

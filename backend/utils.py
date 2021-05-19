@@ -2,4 +2,7 @@ import os
 
 
 def is_prod():
-    return os.environ["FLASK_ENV"] == "production"
+    try:
+        return os.environ["FLASK_ENV"] == "production"
+    except:  # noqa
+        return False

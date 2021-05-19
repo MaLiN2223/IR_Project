@@ -4,7 +4,6 @@ from backend.api import app
 from backend.data_provider import base_path
 from backend.utils import is_prod
 
-print("Environment", os.environ["FLASK_ENV"], base_path())
 if __name__ == "__main__":
 
     if is_prod():

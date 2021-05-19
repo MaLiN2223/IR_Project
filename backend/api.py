@@ -1,7 +1,7 @@
 import time
 from abc import ABC
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from flask import Flask, jsonify, request
@@ -28,7 +28,12 @@ CORS(app)
 stop_words = stopwords.words("english")
 
 
-APP_VERSION = "000"  # git.Repo().head.object.hexsha[:7]
+try:
+    import git
+
+    APP_VERSION = git.Repo().head.object.hexsha[:7]
+except:  # noqa
+    APP_VERSION = "000"  # TODO: figure out how to make gitpython work on ubuntu (git path issue)
 
 
 @app.errorhandler(404)
@@ -37,20 +42,28 @@ def page_not_found(error):
 
 
 @dataclass
-class DebugInformation:
+class DebugRecordInformation:
     keywords: Optional[List[Tuple[str, float]]]
-    similarity: List[float]
+    debug_scores: Dict[str, Any]
+    processing_time: float
 
 
 @dataclass
-class SearchResponse:
+class RecordResponse:
     url: str
     title: str
     urlId: str
     summary: str
     score: float
     modified_score: float
-    debugInformation: Optional[DebugInformation] = None
+    debugInformation: Optional[DebugRecordInformation] = None
+
+
+@dataclass
+class SearchResponse:
+    original_responses: List[RecordResponse]
+    modified_responses: List[RecordResponse]
+    time: float
 
 
 class AbstractIndex(ABC):
@@ -60,16 +73,7 @@ class AbstractIndex(ABC):
 
 keyword_fields = ["summary_keywords", "text_keywords", "processed_keywords"]
 fields_to_download = {
-    x: True
-    for x in [
-        "_id",
-        "fixed_url",
-        "title",
-        "processed_text",
-        "page_text",
-        "xl_summary",
-    ]
-    + keyword_fields
+    x: True for x in ["_id", "fixed_url", "title", "processed_text", "page_text", "xl_summary", "encoded_processed_text"] + keyword_fields
 }
 
 
@@ -92,20 +96,23 @@ def extract_keywords_from_page(page):
 
 
 class BM25Index(AbstractIndex):
-    def search(self, query: List[str], banned_keywords: List[str], top_n: int, is_debug: bool):
+    def search(self, query: List[str], banned_keywords: List[str], top_n: int, is_debug: bool, temperature: float) -> SearchResponse:
+        seach_start = time.time()
+
         bm25 = load_bm25()
         doc_scores = bm25.get_scores(query)
         negative_doc_scores = bm25.get_scores(banned_keywords)
         doc_scores = np.array(doc_scores)
         negative_doc_scores = np.array(negative_doc_scores)
-        arr = doc_scores.argsort()[-100:][::-1]
+        arr = doc_scores.argsort()[-top_n * 10 :][::-1]
         index = get_doc_local_id_to_remote_id()
         doc_ids = list(str(index[x]) for x in arr)
-        responses = []
+        responses: List[RecordResponse] = []
 
         print("Got the list!")
         wiki_ft_model = get_wiki_ft_model()
         for i, record in zip(arr, ids_to_records(doc_ids)):
+            record_start = time.time()
             # our_scores = get_scores(record, query, our_ft_model)
             # wiki_scores = get_scores(record, query, wiki_ft_model)
             modified_score = doc_scores[i]
@@ -130,38 +137,44 @@ class BM25Index(AbstractIndex):
                 #     keyword_to_banned_similarity[i] *= doc_keyword_scores[i]
                 # if len(keyword_to_banned_similarity) > 0:
                 #    mean_closeness_to_bad_keywords = np.mean(keyword_to_banned_similarity)  # higher - worse
-                mn = np.mean([wiki_ft_model.wv[vec] for vec in record["processed_text"]], axis=0)
+                if "encoded_processed_text" in record:
+                    mn = record["encoded_processed_text"]
+                else:
+                    mn = np.mean([wiki_ft_model.wv[vec] for vec in record["processed_text"]], axis=0)
                 processed_text_similarity = cosine_similarity([encoded_banned_keywords, mn])[0][1]
                 # processed_text_similarity = (processed_text_similarity - 0.5) * 2
-                processed_text_similarity = float(processed_text_similarity * 2)
+                processed_text_similarity = float(processed_text_similarity)
                 # modified_score *= (1 - processed_text_similarity)
-                modified_score -= negative_doc_scores[i] * processed_text_similarity  # / 2
+                modified_score -= negative_doc_scores[i] * processed_text_similarity * temperature  # / 2
             if is_debug:
-                debugInformation = DebugInformation(
+                summary = record["xl_summary"][:150] + "..."
+                debugInformation = DebugRecordInformation(
                     keywords=doc_keywords,
-                    similarity={
-                        "wiki": {
-                            "negative_score": negative_doc_scores[i],
-                            "processed_text_similarity": processed_text_similarity,
-                            "mean_closeness_to_bad_keywords": str(mean_closeness_to_bad_keywords),
-                        }
+                    debug_scores={
+                        "negative_score": negative_doc_scores[i],
+                        "processed_text_similarity": processed_text_similarity,
+                        "mean_closeness_to_bad_keywords": str(mean_closeness_to_bad_keywords),
                     },
-                    # ),"keyword_to_banned_similarity": list([str(x) for x in keyword_to_banned_similarity])}},
+                    processing_time=time.time() - record_start,
                 )
             else:
+                summary = ""
                 debugInformation = None
 
-            response = SearchResponse(
+            response = RecordResponse(
                 record["fixed_url"],
                 record["title"],
                 record["_id"],
-                record["xl_summary"][:150] + "...",
+                summary,
                 bm25_score,
                 modified_score,
                 debugInformation,
             )
             responses.append(response)
-        return responses
+        original_responses = sorted(responses, key=lambda x: -x.score)[:top_n]
+        modified_responses = sorted(responses, key=lambda x: -x.modified_score)[:top_n]
+        search_time = time.time() - seach_start
+        return SearchResponse(original_responses, modified_responses, search_time)
 
 
 limiter = Limiter(app, key_func=get_remote_address, default_limits=["200 per day", "50 per hour"])
@@ -214,32 +227,51 @@ def preprocess_query(query: str):
     return query.lower().split(" ")
 
 
-def search(query: str, keywords: str, top_n: int, is_debug: bool):
+def search(query: str, keywords: str, top_n: int, is_debug: bool, temperature: float):
 
-    top_n = 10
+    top_n = min(top_n, 10)
     query_list = preprocess_query(query)
     keywords_list = preprocess_query(" ".join(keywords.lower().split(",")))
     index = BM25Index()
 
-    return index.search(query_list, keywords_list, top_n, is_debug)
+    return index.search(query_list, keywords_list, top_n, is_debug, temperature)
 
 
 class SearchEngine(Resource):
-    def get(self, query):
+    def do_get(self, query):
         # is_debug = request.args.get("debugMode")
         top_n = request.args.get("topn")
         is_debug = request.args.get("debug")
         keywords = request.args.get("keywords")
+        print("keywords", keywords)
+        temperature = request.args.get("temperature")
+
+        try:
+            temperature = 2.0 if temperature is None else float(temperature)
+        except:  # noqa
+            temperature = 2.0
+
         if top_n is None:
             top_n = 10
+        try:
+            top_n = int(top_n)
+        except:  # noqa
+            top_n = 10
+
         if is_debug == "true":
             is_debug = True
         else:
             is_debug = False
         print("Is debug?", is_debug)
 
-        results = search(query, keywords, int(top_n), is_debug)
+        results = search(query, keywords, int(top_n), is_debug, temperature)
         return jsonify(results)
+
+    def get(self, query):
+        try:
+            return self.do_get(query)
+        except Exception as ex:
+            print("ERROR", ex)  # TODO: log
 
 
 @dataclass
