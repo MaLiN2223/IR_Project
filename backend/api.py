@@ -177,7 +177,7 @@ class BM25Index(AbstractIndex):
         return SearchResponse(original_responses, modified_responses, search_time)
 
 
-limiter = Limiter(app, key_func=get_remote_address, default_limits=["200 per day", "50 per hour"])
+limiter = Limiter(app, key_func=get_remote_address, default_limits=["200 per day", "50 per hour", "3 per second"])
 
 
 def get_scores(document, query: List[str], ft_model):

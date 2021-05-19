@@ -87,10 +87,12 @@ R = argmax(S(D),N) */}
     }
 
     private howToNavigate() {
+        {/*#TODO : fill in*/ }
         return `how to fill in the fields, add parameters list (temperature, debug) note that more keywords => slower, this is because we did not precompute keyword vectors`
     }
 
     private techStackBody() {
+        {/*#TODO : fill in*/ }
         return `
         Typescript+bootstrap, python (flask + other libs), linux (azure hosted virtual machine), nginx,
         I'm using google domains for my malin.dev domain
@@ -105,8 +107,8 @@ R = argmax(S(D),N) */}
                 {createCard("0", "How to navigate the page?", this.howToNavigate())}
                 {createCard("1", "Task description", this.taskBody())}
                 {createCard("2", "How it was solved?", this.solutionBody())}
-                {createCard("3", "Implementation details (what model, how etc)", "body2")}
-                {createCard("4", "Technological details (tech stack)", "body2")}
+                {createCard("3", "Implementation details (what model, how etc)", "TBA")}
+                {createCard("4", "Technological details (tech stack)", this.techStackBody())}
             </Accordion>
         </div>
 
