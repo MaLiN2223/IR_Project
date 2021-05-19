@@ -26,6 +26,7 @@
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject",
+        "build_prod": "react-scripts build && cp build/* /var/www/html/ -r && export REACT_APP_CURRENT_GIT_SHA=`git rev-parse --short HEAD` && export NODE_ENV=production",
         "start_prod": "export REACT_APP_CURRENT_GIT_SHA=`git rev-parse --short HEAD` && export NODE_ENV=production && yarn build && serve -s build"
     },
     "eslintConfig": {

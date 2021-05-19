@@ -1,12 +1,12 @@
 1. Backend:
-   1. Upload new models (indexes and mongodb)
+   1. Log all queries?
    2. Why always cors error when internal error happens?
-   3. Log all queries?
-   4. Test keyword values (can we get some good scores out of it?)
-   5. empty vocabulary; perhaps the documents only contain stop words (for summarize)
-   6. Check for empty `preprocessed_text`
-   7. Turn off threading or host separate api for the models?
-   8. Rate limits
+   3. Test keyword values (can we get some good scores out of it?)
+   4. empty vocabulary; perhaps the documents only contain stop words (for summarize)
+   5. Check for empty `preprocessed_text`
+   6. Turn off threading or host separate api for the models?
+   7. Rate limits
+   8. Upload new models (indexes and mongodb) - retry everything just to make sure everything works
 
 
 2. Frontend:
