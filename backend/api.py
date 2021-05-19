@@ -82,7 +82,6 @@ class SearchEngine(Resource):
             is_debug = True
         else:
             is_debug = False
-        print("Is debug?", is_debug)
 
         results = search(query, keywords, int(top_n), is_debug, temperature)
         return jsonify(results)
