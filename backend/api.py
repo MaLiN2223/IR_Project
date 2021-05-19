@@ -63,7 +63,6 @@ class SearchEngine(Resource):
         top_n = request.args.get("topn")
         is_debug = request.args.get("debug")
         keywords = request.args.get("keywords")
-        print("keywords", keywords)
         temperature = request.args.get("temperature")
 
         try:
