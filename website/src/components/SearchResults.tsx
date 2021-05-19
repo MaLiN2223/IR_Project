@@ -41,7 +41,6 @@ export default class SearchResults extends React.Component<SearchResultsProps> {
 
     private formatUrl(url: String) {
         return url;
-        return url.replace("https://starwars.fandom.com/wiki", "");//.replace("%27", "'");
     }
 
     render() {

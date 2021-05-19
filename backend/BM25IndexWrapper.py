@@ -1,3 +1,4 @@
+import logging
 import time
 from abc import ABC
 from dataclasses import dataclass
@@ -12,8 +13,9 @@ from backend.data_provider import (
     load_bm25,
 )
 from src.Config import Config
-from src.index.preprocessing_pipeline import Pipeline
 from src.storage.database import websites_db
+
+logger = logging.getLogger()
 
 
 def load_all_models():
@@ -25,7 +27,7 @@ def load_all_models():
 config = Config.get_config()
 should_load_models_at_startup = config["should_load_models_at_startup"]
 if should_load_models_at_startup == "true":
-    print("Loading all models at startup!")
+    logger.info("Loading all models at startup!")
     load_all_models()
 
 
@@ -97,7 +99,6 @@ class BM25Index(AbstractIndex):
         doc_ids = list(str(index[x]) for x in arr)
         responses: List[RecordResponse] = []
 
-        print("Got the list!")
         wiki_ft_model = get_wiki_ft_model()
         for i, record in zip(arr, ids_to_records(doc_ids)):
             record_start = time.time()
@@ -141,7 +142,7 @@ class BM25Index(AbstractIndex):
                 debugInformation,
             )
             responses.append(response)
-        print("Response size ", len(responses))
+        logger.info("Response size ", len(responses))
         original_responses = sorted(responses, key=lambda x: -x.score)[:top_n]
         modified_responses = sorted(responses, key=lambda x: -x.modified_score)[:top_n]
         search_time = time.time() - seach_start

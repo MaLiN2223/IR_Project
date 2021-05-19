@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import SearchResults, { SearchResponse } from './SearchResults';
 import axios from 'axios';
 
-import { Navbar, Nav, Form, NavDropdown, FormControl, Button, FormCheck } from 'react-bootstrap/'
+import { Navbar, Nav, Form, NavDropdown, FormControl, Button, FormCheck, Alert, Spinner } from 'react-bootstrap/'
 import { baseUrl } from '../consts';
 import { Container, Row, Col } from "react-bootstrap"
 
@@ -13,18 +13,19 @@ type SearchState = {
     value: string,
     keywords: string,
     results: SearchResponse | null,
-    submitSuccess: boolean,
     show_scores: boolean,
     show_debug: boolean,
     is_debug: boolean,
-    temperature: number
+    temperature: number,
+    error: string,
+    is_loading: boolean
 }
 
 export default class SearchPage extends React.Component<{}, SearchState> {
     constructor(props: Readonly<any>) {
         super(props);
         const isDebug = new URL(window.location.href).searchParams.get('debug') === 'true';
-        this.state = { value: '', results: null, submitSuccess: true, show_scores: false, is_debug: isDebug, show_debug: false, keywords: '', temperature: 2.0 };
+        this.state = { value: '', results: null, show_scores: false, is_debug: isDebug, show_debug: false, keywords: '', temperature: 2.0, error: '', is_loading: false };
 
 
         this.handleChange = this.handleChange.bind(this);
@@ -55,8 +56,8 @@ export default class SearchPage extends React.Component<{}, SearchState> {
 
     private async sendForm() {
         if (this.validateForm()) {
-            const submitSuccess: boolean = await this.submitForm();
-            this.setState({ submitSuccess });
+            await this.submitForm();
+            this.setState({ results: null, is_loading: true });
         }
         else {
             // TODO: failue
@@ -92,10 +93,19 @@ export default class SearchPage extends React.Component<{}, SearchState> {
                 }
             })
             .then(response => {
-                console.log(response)
-                this.setState({ results: response.data })
+                this.setState({ results: response.data, is_loading: false })
             })
-            .catch(x => {
+            .catch(err => {
+                const status = err.response.status;
+                const message = err.response.data.message
+                if (status == 429) {
+                    const displayMessage = 'You are being rate limited. You excideed the following limit: ' + message + '. Please wait and try again.';
+                    this.setState({ error: displayMessage });
+                }
+                else {
+                    const displayMessage = 'Unexpected error happened ' + message + ', if you want to please contact Malin with this message.';
+                    this.setState({ error: displayMessage });
+                }
                 return false;
             })
             ;
@@ -110,7 +120,7 @@ export default class SearchPage extends React.Component<{}, SearchState> {
     }
 
     render() {
-        const { show_scores, results, is_debug, temperature, show_debug } = this.state;
+        const { show_scores, results, is_debug, temperature, show_debug, error, is_loading } = this.state;
 
         const modifiedScores = results === null ? [] : results.modified_responses;
         const realScores = results === null ? [] : results.original_responses;
@@ -119,6 +129,7 @@ export default class SearchPage extends React.Component<{}, SearchState> {
         return (
             <Container >
 
+                {error != '' ? <Alert key={0} variant='primary'>{error}</Alert> : ""}
                 <Form onSubmit={this.handleSubmit}>
                     <Row>
                         <Form.Label column sm="1">Keywords</Form.Label>
@@ -169,15 +180,18 @@ export default class SearchPage extends React.Component<{}, SearchState> {
                     </Row>
                 </Form>
                 {show_debug && time > 0 ? <Row>Found in {time} seconds</Row> : ""}
-                <Row className="show-grid">
 
-                    <Col xs={2} md={6}>
-                        <SearchResults results={realScores} title="Original BM25 results" show_scores={show_scores} is_debug={show_debug} />
-                    </Col>
-                    <Col xs={2} md={6}>
-                        <SearchResults results={modifiedScores} title="Modified results" show_scores={show_scores} is_debug={show_debug} />
-                    </Col>
-                </Row>
+                {is_loading && !error ? <Spinner animation="border" /> : ""}
+                {results !== null ?
+                    <Row className="show-grid">
+
+                        <Col xs={2} md={6}>
+                            <SearchResults results={realScores} title="Original BM25 results" show_scores={show_scores} is_debug={show_debug} />
+                        </Col>
+                        <Col xs={2} md={6}>
+                            <SearchResults results={modifiedScores} title="Modified results" show_scores={show_scores} is_debug={show_debug} />
+                        </Col>
+                    </Row> : ""}
 
             </Container >
         );

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from logging.handlers import RotatingFileHandler
 
 import git
-import numpy as np
 from flask import Flask, jsonify, request
 from flask.logging import default_handler
 from flask_cors import CORS
@@ -28,7 +27,7 @@ root.addHandler(handler)
 APP_VERSION = git.Repo().head.object.hexsha[:7]
 
 preprocessing_pipeline = Pipeline(stopwords.words("english"))
-limiter = Limiter(app, key_func=get_remote_address, default_limits=["200 per day", "50 per hour", "3 per second"])
+limiter = Limiter(app, key_func=get_remote_address, default_limits=["200 per day", "60 per hour", "1 per second"])
 
 
 @app.errorhandler(404)
