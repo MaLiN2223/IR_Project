@@ -203,3 +203,4 @@ data_in/*
 .vscode/*
 models/*
 configuration/hidden/*
+*.pem
