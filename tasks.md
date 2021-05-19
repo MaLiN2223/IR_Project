@@ -15,7 +15,5 @@
    3. Tests?
 
 4. For presentation (page info):
-   1. Add info about rate limiting
-   2. Fill rest of the text in about
-   3. Prepare example queries
-   4. Include screenshots to demostrate
+   1. Prepare example queries
+   2. Include GitHub page
