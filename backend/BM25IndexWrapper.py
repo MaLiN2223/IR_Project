@@ -11,8 +11,22 @@ from backend.data_provider import (
     get_wiki_ft_model,
     load_bm25,
 )
+from src.Config import Config
 from src.index.preprocessing_pipeline import Pipeline
 from src.storage.database import websites_db
+
+
+def load_all_models():
+    get_wiki_ft_model()
+    get_doc_local_id_to_remote_id()
+    load_bm25()
+
+
+config = Config.get_config()
+should_load_models_at_startup = config["should_load_models_at_startup"]
+if should_load_models_at_startup == "true":
+    print("Loading all models at startup!")
+    load_all_models()
 
 
 @dataclass
