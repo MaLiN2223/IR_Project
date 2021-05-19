@@ -96,15 +96,22 @@ export default class SearchPage extends React.Component<{}, SearchState> {
                 this.setState({ results: response.data, is_loading: false, error: '' })
             })
             .catch(err => {
-                const status = err.response.status;
-                const message = err.response.data.message
-                if (status === 429) {
-                    const displayMessage = 'You are being rate limited. You excideed the following limit: ' + message + '. Please wait and try again.';
+                if (!err.response) {
+                    const displayMessage = 'Unexpected error happened: Network Error. If you want to, please contact Malin with this message.';
                     this.setState({ error: displayMessage });
                 }
                 else {
-                    const displayMessage = 'Unexpected error happened ' + message + ', if you want to please contact Malin with this message.';
-                    this.setState({ error: displayMessage });
+                    const status = err.response.status;
+                    console.log(status);
+                    const message = err.response.data.message
+                    if (status === 429) {
+                        const displayMessage = 'You are being rate limited. You excideed the following limit: ' + message + '. Please wait and try again.';
+                        this.setState({ error: displayMessage });
+                    }
+                    else {
+                        const displayMessage = 'Unexpected error happened ' + message + ', if you want to, please contact Malin with this message.';
+                        this.setState({ error: displayMessage });
+                    }
                 }
                 return false;
             })

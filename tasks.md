@@ -1,13 +1,12 @@
 1. Backend:
-   1. Fix `encoded_processed_text` (Check for empty `preprocessed_text`)
+   1. Upload new models (indexes and mongodb) - retry everything just to make sure everything works
    2. Log all queries?
-   3. Why always cors error when internal error happens?
-   4. Test keyword values (can we get some good scores out of it?)
-   5. empty vocabulary; perhaps the documents only contain stop words (for summarize)
-   6. Upload new models (indexes and mongodb) - retry everything just to make sure everything works
+   3. Test keyword values (can we get some good scores out of it?)
+   4. Fix `encoded_processed_text` (Check for empty `preprocessed_text`) -- real empty pages
+   5. empty vocabulary; perhaps the documents only contain stop words (for summarize) -- real empty pages
 
 2. Frontend:
-   1. Error when cant connect to backend
+   1. Error when cant connect to backend, or any other error
    2. Black/flake -like things for tsx
    3. Cosmetic changes frontend
 
