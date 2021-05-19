@@ -6,8 +6,7 @@
    5. empty vocabulary; perhaps the documents only contain stop words (for summarize) -- real empty pages
 
 2. Frontend:
-   1. Error when cant connect to backend, or any other error
-   2. Black/flake -like things for tsx
+   1. Black/flake -like things for tsx
    3. Cosmetic changes frontend
 
 3. Code quality:

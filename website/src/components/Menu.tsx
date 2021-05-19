@@ -1,25 +1,25 @@
-import React from 'react';
-import { Navbar, Nav, Form, NavDropdown, FormControl, Button } from 'react-bootstrap/'
-import SearchPage from './SearchPage';
+import React from "react";
+import { Navbar, Nav } from "react-bootstrap/";
 
 type MenuProps = {
-    links: Array<{ name: string; to: string }>
-}
-
+  links: Array<{ name: string; to: string }>;
+};
 
 export default class Menu extends React.Component<MenuProps> {
-    constructor(props: MenuProps) {
-        super(props);
-    }
-    render() {
-        const NavLinks: any = () => this.props.links.map((link: { name: string, to: string }) => <Nav.Link href={link.to} key={link.name}>{link.name}</Nav.Link>)
-        return (
-            <Navbar bg="dark" variant="dark">
-                <Navbar.Brand href="/">Navbar</Navbar.Brand>
-                <Nav className="mr-auto">
-                    <NavLinks />
-                </Nav>
-            </Navbar >
-        )
-    }
+  render() {
+    const NavLinks: any = () =>
+      this.props.links.map((link: { name: string; to: string }) => (
+        <Nav.Link href={link.to} key={link.name}>
+          {link.name}
+        </Nav.Link>
+      ));
+    return (
+      <Navbar bg="dark" variant="dark">
+        <Navbar.Brand href="/">Home</Navbar.Brand>
+        <Nav className="mr-auto">
+          <NavLinks />
+        </Nav>
+      </Navbar>
+    );
+  }
 }
