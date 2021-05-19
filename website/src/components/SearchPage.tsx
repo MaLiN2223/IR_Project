@@ -98,7 +98,7 @@ export default class SearchPage extends React.Component<{}, SearchState> {
             .catch(err => {
                 const status = err.response.status;
                 const message = err.response.data.message
-                if (status == 429) {
+                if (status === 429) {
                     const displayMessage = 'You are being rate limited. You excideed the following limit: ' + message + '. Please wait and try again.';
                     this.setState({ error: displayMessage });
                 }
