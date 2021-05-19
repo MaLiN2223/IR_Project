@@ -93,7 +93,7 @@ export default class SearchPage extends React.Component<{}, SearchState> {
                 }
             })
             .then(response => {
-                this.setState({ results: response.data, is_loading: false })
+                this.setState({ results: response.data, is_loading: false, error: '' })
             })
             .catch(err => {
                 const status = err.response.status;
