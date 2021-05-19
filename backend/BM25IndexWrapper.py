@@ -127,6 +127,7 @@ class BM25Index(AbstractIndex):
                 debugInformation,
             )
             responses.append(response)
+        print("Response size ", len(responses))
         original_responses = sorted(responses, key=lambda x: -x.score)[:top_n]
         modified_responses = sorted(responses, key=lambda x: -x.modified_score)[:top_n]
         search_time = time.time() - seach_start

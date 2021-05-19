@@ -24,11 +24,10 @@ root = logging.getLogger()
 root.addHandler(default_handler)
 root.addHandler(handler)
 
-stop_words = stopwords.words("english")
-preprocessing_pipeline = Pipeline(stopwords.words("english"))
 
 APP_VERSION = git.Repo().head.object.hexsha[:7]
 
+preprocessing_pipeline = Pipeline(stopwords.words("english"))
 limiter = Limiter(app, key_func=get_remote_address, default_limits=["200 per day", "50 per hour", "3 per second"])
 
 
