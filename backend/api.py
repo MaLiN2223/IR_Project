@@ -1,4 +1,5 @@
 import logging
+import traceback
 from dataclasses import dataclass
 from logging.handlers import RotatingFileHandler
 
@@ -27,7 +28,7 @@ root.addHandler(handler)
 APP_VERSION = git.Repo().head.object.hexsha[:7]
 
 preprocessing_pipeline = Pipeline(stopwords.words("english"))
-limiter = Limiter(app, key_func=get_remote_address, default_limits=["200 per day", "60 per hour", "1 per second"])
+limiter = Limiter(app, key_func=get_remote_address, default_limits=["200 per day", "60 per hour", "3 per second"])
 
 
 @app.errorhandler(404)
@@ -91,6 +92,8 @@ class SearchEngine(Resource):
             return self.do_get(query)
         except Exception as ex:
             print("ERROR", ex)  # TODO: log
+            track = traceback.format_exc()
+            print(track)
 
 
 @dataclass

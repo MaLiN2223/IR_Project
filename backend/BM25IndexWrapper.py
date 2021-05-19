@@ -129,18 +129,10 @@ class BM25Index(AbstractIndex):
                     processing_time=time.time() - record_start,
                 )
             else:
-                summary = ""
+                summary = record["xl_summary"][:150] + "..."
                 debugInformation = None
 
-            response = RecordResponse(
-                record["fixed_url"],
-                record["title"],
-                record["_id"],
-                summary,
-                bm25_score,
-                modified_score,
-                debugInformation,
-            )
+            response = RecordResponse(record["fixed_url"], record["title"], record["_id"], summary, bm25_score, modified_score, debugInformation)
             responses.append(response)
         logger.info("Response size ", len(responses))
         original_responses = sorted(responses, key=lambda x: -x.score)[:top_n]

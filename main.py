@@ -24,10 +24,12 @@ from src.data_processing.tasks.tasks import (
 def compute_index():
     direct_logs_to_console()
     dump_corpus_to_file()
-    # prepare_dictionary()
-    # generate_tfidf()
     generate_bm25()
     train_fasttext(300, "fin", "fasttext_300.model", generate_tmp_file=True)
+
+    # OLD BELOW
+    # prepare_dictionary()
+    # generate_tfidf()
     # generate_weighted_vectors()
     # generate_fasttext_vectors()
     # generate_lookup()
@@ -42,7 +44,7 @@ def initialize_database():
 
 
 def preprocess_for_extraction():
-    summarise()
+    # summarise()
     encode_preprocessed_text()
     # add_keywords() #
 

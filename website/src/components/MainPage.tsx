@@ -9,7 +9,7 @@ import HomePage from './HomePage';
 
 const navigation = {
     links: [
-        { name: "Retrieval", to: "/search" },
+        { name: "Search", to: "/search" },
         { name: "Read me", to: "/about" },
         { name: "Admin", to: "/admin" },
     ]

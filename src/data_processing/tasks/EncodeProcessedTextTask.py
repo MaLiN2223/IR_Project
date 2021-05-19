@@ -13,7 +13,7 @@ class DataProviderForEncodeProcessedTextTask(DataProvider):
         override_query = {
             "error_code": {"$exists": False},
             "processed_text": {"$exists": True},
-            "encoded_processed_text": {"$exists": False},
+            "$or": [{"encoded_processed_text": {"$exists": False}}, {"encoded_processed_text_version": {"$ne": 1}}],
         }
         super().__init__(1000, fields_to_download=["_id", "processed_text"], additional_query_params=override_query, should_count=False)
 
@@ -39,7 +39,7 @@ class EncodeProcessedTextTask(Thread):
                         encoded_processed_text = [encoded_processed_text]
 
                     encoded = list([float(x) for x in encoded_processed_text])
-                    bulk.find({"_id": id}).update_one({"$set": {"encoded_processed_text": encoded}})
+                    bulk.find({"_id": id}).update_one({"$set": {"encoded_processed_text": encoded, "encoded_processed_text_version": 1}})
                 except Exception as ex:
                     print(ex, processed_text)
             bulk.execute()

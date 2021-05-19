@@ -1,6 +1,12 @@
 import React, { Component } from 'react';
 import { Accordion, Button, Card } from 'react-bootstrap';
 import "../styles/about.css"
+import basics from "../imgs/basic.png";
+import basics_debug from "../imgs/basic_debug.png";
+import results_with_score from "../imgs/results_with_score.png";
+import results_debug_full from "../imgs/results_debug_full.png";
+import results_debug_temp from "../imgs/results_debug_temp.png";
+import results from "../imgs/results.png";
 
 type ExpandableProps = {
     key: string,
@@ -53,7 +59,7 @@ export default class AboutPage extends Component<{}> {
             <p>You can also think about it as a soft censorship.</p>
 
             <p>Note: since this approach is not removing articles from the list, it is still possible to find ones that have very high number of keywords you wanted to ban.
-        This can be adressed by 'temperature' parameter (discussed in the implementation details).</p>
+        This can be adressed by 'temperature' parameter (as shown in the "How it was solved?" card).</p>
         </div>)
 
     }
@@ -82,32 +88,78 @@ By default the algorithm uses `T=2` but you can modify it by using a parameter, 
 S(D_n) = BM(D_n, Q) - BM(D_n, K) \cdot FT(D_n, K) \cdot T
 \\
 R = argmax(S(D),N) */}
+<br/><br/>
+        Temperature can be used in three ways:
+        <ul>
+            <li>T &gt; 0 indicates that keywords should be considered as "negative" and the models should try to derank them.</li>
+            <li>T = 0 indicates no change to the original BM model.</li>
+            <li>T &lt; 0 indicates that keywords should be considered as "positive" and the models should try to rank them higher.</li>
+        </ul>
             </p>
         </div>
     }
 
     private howToNavigate() {
         {/*#TODO : fill in*/ }
-        return `how to fill in the fields, add parameters list (temperature, debug) note that more keywords => slower, this is because we did not precompute keyword vectors`
+        return <div>
+            <h1>Basic search</h1>
+            <p>To start searching navigate to "Search" tab or click <a href="https://www.malin.dev/search">here</a>. 
+            The main page should look like below:<br/>
+            <img src={basics} alt="basic" /><br/></p>
+            <p>To search please fill in "Phrase" field, you should also fill in "keywords" field to provide keywords for deranking, they should be written in form of a comma separated list like shown below.<br/>
+            Now, press the green "search" button. <br/>
+            After some time, you will see two columns: "Original results" and "Modified results".  <br/>
+            <img src={results} alt="results" /><br/></p>
+            <p>First column represents results sorted by BM25L model, second column corresponds to results ordered by modified value (according to the formula explained in "How was it solved?").<br/>
+            Note: the results are clickable so you can actually visit the wookiepedia page that a given result links to. <br/>
+            You can also notice a checkbox "scores", after searching and selecting it, you should be able to see the scores computed for each record.<br/>
+            <img src={results_with_score} alt="results_with_score" /><br/></p>
+
+            <h1>Advanced options</h1>
+            <p>In order to modify the temperature parameter and see more details you will have to navigate to search page with debug parameter <a href="https://www.malin.dev/search?debug=true">https://www.malin.dev/search?debug=true</a>.<br/>
+            After entering you will see two more options appeared, temp and debug checkbox. <br/>
+            <img src={basics_debug} alt="results_with_score" /><br/></p>
+            <p>First one allows you to play with temperature parameter, you can change it to a selected value and press the green "Search" button again.<br/>
+            <img src={results_debug_temp} alt="results_debug_temp" /><br/> </p>
+            <p>The "debug" checkbox allows you to learn more about the scores returned by the model.<br/>
+            <img src={results_debug_full} alt="results_debug_full" /><br/>  </p>
+
+        </div>
     }
 
     private techStackBody() {
-        {/*#TODO : fill in*/ }
-        return `
-        Typescript+bootstrap, python (flask + other libs), linux (azure hosted virtual machine), nginx,
-        I'm using google domains for my malin.dev domain
-        The code is  here: [github link]
-        `
+        return <p>
+            <ul>
+                <li>MongoDb with python driver </li>
+                <li>TypeScript + bootstrap </li>
+                <li>Python with libs: flask + FastText + rank_bm25 and others, please see requirements.txt in git repo</li>
+                <li>Page is hosted on azure VM Standard E2as_v4 with Ubuntu, I am using nginx to host both React and Flask apps. </li>
+                <li>To register the domain (malin.dev), I am using google domains.</li>
+                <li>Link to github will be provided soon.</li>
+            </ul>
+        </p>
+    }
+
+    private implementationDetailsBody() {
+        return <p>
+            All data was collected from <a href="https://starwars.fandom.com/wiki/Main_Page">Wookiepedia</a> - fan made wiki for star wars. I have collected almost all articles as of May 10th.
+            You might find that some information might be incomplete or missing, this is because I have had some troubles parsing certain websites due to non-english characters. For each page I have extracted the "content" (i.e. text without banners) and removed all references.
+            It was then piped through preprocessing pipeline (see src\index\preprocessing_pipeline.py file for details) - it tokenized whole article, cleaned some words and stemmed them. Whatever was left was used to build BM and fasttext models.<br />
+            <p>There are a few important libraries used in this project: <br />
+                <a href="https://github.com/dorianbrown/rank_bm25">rank_bm25</a> which helped me to compute BM25L model that I've used for the retrieval part.< br />
+                <a href="https://github.com/facebookresearch/fastText">fastText</a> that I have used for training the fastText model.<br />
+            </p>
+        </p>
     }
 
     render() {
         return <div>
-
+            Please take a look at "How to navigate the page?" <br />if you encounter any issues, it lists some tips to see more scores.
             <Accordion>
                 {createCard("0", "How to navigate the page?", this.howToNavigate())}
                 {createCard("1", "Task description", this.taskBody())}
-                {createCard("2", "How it was solved?", this.solutionBody())}
-                {createCard("3", "Implementation details (what model, how etc)", "TBA")}
+                {createCard("2", "How was it solved?", this.solutionBody())}
+                {createCard("3", "Implementation details (what model, how etc)", this.implementationDetailsBody())}
                 {createCard("4", "Technological details (tech stack)", this.techStackBody())}
             </Accordion>
         </div>

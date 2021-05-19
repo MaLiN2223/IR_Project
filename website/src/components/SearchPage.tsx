@@ -131,13 +131,13 @@ export default class SearchPage extends React.Component<{}, SearchState> {
                 </Row>
                 <Row>
                     <Form.Label column sm="1">Phrase</Form.Label>
-                    <Col md={is_debug ? 9 : 11}>
+                    <Col md={is_debug ? 8 : 11}>
                         <FormControl required type="text" placeholder="Search phrase" className="mr-sm-2" value={this.state.value} onChange={this.handleChange} />
                         <Button variant="outline-success" type="submit">Search</Button>
 
                     </Col>
                     {is_debug ? <Form.Label column sm="1">Temp</Form.Label> : ""}
-                    {is_debug ? <Col md={1}>
+                    {is_debug ? <Col md={2}>
 
                         <FormControl
                             type="number"
@@ -184,17 +184,17 @@ export default class SearchPage extends React.Component<{}, SearchState> {
         return (
             <Container >
 
-                {error != '' ? <Alert key={0} variant='primary'>{error}</Alert> : ""}
+                {error !== '' ? <Alert key={0} variant='primary'>{error}</Alert> : ""}
                 {form}
                 {show_debug && time > 0 ? <Row>Found in {time} seconds</Row> : ""}
                 {is_loading && !error ? <Spinner animation="border" /> : ""}
                 {results !== null ?
                     <Row className="show-grid">
 
-                        <Col xs={2} md={6}>
-                            <SearchResults results={realScores} title="Original BM25 results" show_scores={show_scores} is_debug={show_debug} />
+                        <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                            <SearchResults results={realScores} title="Original results" show_scores={show_scores} is_debug={show_debug} />
                         </Col>
-                        <Col xs={2} md={6}>
+                        <Col xs={12} sm={12} md={6} lg={6} xl={6}>
                             <SearchResults results={modifiedScores} title="Modified results" show_scores={show_scores} is_debug={show_debug} />
                         </Col>
                     </Row> : ""}

@@ -1,6 +1,7 @@
 
 import React, { Component } from 'react';
 import { ListGroup, Card } from 'react-bootstrap'
+import '../styles/search_results.css'
 
 export type SearchResponse = {
     original_responses: Array<SearchRecordResponse>
@@ -40,7 +41,8 @@ export default class SearchResults extends React.Component<SearchResultsProps> {
     }
 
     private formatUrl(url: String) {
-        return url;
+        //return url;
+        return url.replace("https://starwars.fandom.com/wiki/", "");
     }
 
     render() {
@@ -51,10 +53,9 @@ export default class SearchResults extends React.Component<SearchResultsProps> {
             <ListGroup>
                 {results.map(result => (
                     <ListGroup.Item as="li" key={result.urlId}>
-                        <Card className="mb-2" >
-                            <Card.Body>
-                                <Card.Title>{result.title}</Card.Title>
-                                <Card.Link href={result.url}>{this.formatUrl(result.url)}</Card.Link>
+                        <Card>
+                            <Card.Body> 
+                                <Card.Link href={result.url}>{this.formatUrl(result.url)}</Card.Link> 
                                 {show_scores ? <Card.Footer><div>Original score: {result.score}<br /> Modified score: {result.modified_score}</div></Card.Footer> : ""}
                                 {is_debug ? <Card.Footer><div>FT smilarity: {result.debugInformation.debug_scores.processed_text_similarity}<br /> Negative BM: {result.debugInformation.debug_scores.negative_score}</div></Card.Footer> : ""}
                             </Card.Body>

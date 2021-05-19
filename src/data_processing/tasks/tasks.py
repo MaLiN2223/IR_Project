@@ -87,7 +87,7 @@ def add_keywords():
 
 
 def encode_preprocessed_text():
-    threads_count = 1
+    threads_count = 2
     provider = DataProviderForEncodeProcessedTextTask()
     threads = []
     print("Starting text processing")
