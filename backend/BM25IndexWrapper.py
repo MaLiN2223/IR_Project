@@ -113,6 +113,7 @@ class BM25Index(AbstractIndex):
                 if "encoded_processed_text" in record:
                     mn = record["encoded_processed_text"]
                 else:
+                    print("Not in record")
                     mn = np.mean([wiki_ft_model.wv[vec] for vec in record["processed_text"]], axis=0)
                 processed_text_similarity = cosine_similarity([encoded_banned_keywords, mn])[0][1]
                 processed_text_similarity = float(processed_text_similarity)
